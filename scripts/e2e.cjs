@@ -35,6 +35,7 @@ const check = (name, ok, detail = "") => results.push([ok ? "PASS" : "FAIL", nam
   const tag = Date.now().toString(36);
   const password = `Tw-${tag}-pass!`;
   const people = {};
+  const errors = [];
   const prof = fs.mkdtempSync(path.join(os.tmpdir(), "tw-e2e-"));
   const port = 9300 + Math.floor(Math.random() * 300);
   const edge = spawn(EDGE, ["--headless=new", "--disable-gpu", `--remote-debugging-port=${port}`, `--user-data-dir=${prof}`, "--window-size=430,1000", "about:blank"], { stdio: "ignore" });
@@ -55,13 +56,13 @@ const check = (name, ok, detail = "") => results.push([ok ? "PASS" : "FAIL", nam
     await new Promise((r) => ws.addEventListener("open", r, { once: true }));
     let id = 0;
     const waiting = new Map();
-    const errors = [];
     ws.addEventListener("message", (m) => {
       const d = JSON.parse(m.data);
       if (d.id && waiting.has(d.id)) {
         waiting.get(d.id)(d);
         waiting.delete(d.id);
       }
+      if (d.method === "Runtime.consoleAPICalled" && d.params.type === "error") errors.push(`console: ${d.params.args.map((a) => a.value || a.description || "").join(" ")}`.slice(0, 300));
       if (d.method === "Runtime.exceptionThrown") errors.push(String((d.params.exceptionDetails.exception || {}).description || d.params.exceptionDetails.text).slice(0, 200));
     });
     const cdp = (method, params = {}) => new Promise((res, rej) => { const i = ++id; waiting.set(i, (d) => (d.error ? rej(new Error(d.error.message)) : res(d.result))); ws.send(JSON.stringify({ id: i, method, params })); });
@@ -72,10 +73,16 @@ const check = (name, ok, detail = "") => results.push([ok ? "PASS" : "FAIL", nam
         if (await ev(e).catch(() => false)) return;
         await sleep(250);
       }
-      throw new Error(`timeout: ${what} @ ${await ev("location.href")} :: ${(await text()).slice(0, 300)}`);
+      throw new Error(`timeout: ${what} @ ${await ev("location.href")} :: ${(await text()).replace(/\s+/g, " ").slice(0, 1500)}`);
     };
     const waitText = (t, what) => waitFor(`document.body.innerText.includes(${JSON.stringify(t)})`, what || t);
     const go = async (p) => { await cdp("Page.navigate", { url: `${BASE}${p}` }); await sleep(400); await waitFor("document.readyState === 'complete'", `load ${p}`); };
+    /** Opens an in-app page and waits until the app has loaded the user's data. */
+    const goApp = async (p) => {
+      await go(p);
+      await waitFor("!document.body.innerText.includes('Getting your day ready') && !!document.querySelector('nav[aria-label=Main]') && document.querySelectorAll('main, h1').length > 0", `app page ${p}`);
+      await sleep(500);
+    };
     const setVal = (sel, v) => ev(`(() => { const el = document.querySelector(${JSON.stringify(sel)}); if (!el) throw new Error('missing ' + ${JSON.stringify(sel)});
       const proto = el.tagName === 'SELECT' ? HTMLSelectElement.prototype : el.tagName === 'TEXTAREA' ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype;
       Object.getOwnPropertyDescriptor(proto, 'value').set.call(el, ${JSON.stringify(v)}); el.dispatchEvent(new Event('input', { bubbles: true })); el.dispatchEvent(new Event('change', { bubbles: true })); return true; })()`);
@@ -88,7 +95,7 @@ const check = (name, ok, detail = "") => results.push([ok ? "PASS" : "FAIL", nam
       await setVal("input[name=email]", people[who].email);
       await setVal("input[name=password]", password);
       await click("Let's go", "button");
-      await waitFor("location.pathname === '/' && !document.body.innerText.includes('Getting your day ready')", `${who} registered`);
+      await waitFor("location.pathname === '/' && !document.body.innerText.includes('Getting your day ready')", `${who} registered`, 240);
       const found = await users.list({ queries: [Query.equal("email", people[who].email)] });
       people[who].id = found.users[0]?.$id ?? null;
     };
@@ -101,13 +108,21 @@ const check = (name, ok, detail = "") => results.push([ok ? "PASS" : "FAIL", nam
       await waitFor("location.pathname === '/' && !document.body.innerText.includes('Getting your day ready')", `${who} signed in`);
     };
     const addTask = async (title, minutes) => {
+      await waitFor("[...document.querySelectorAll('button')].some(b => b.textContent.includes('+ Add a task'))", "add button");
       await click("+ Add a task", "button");
       await waitFor("!!document.querySelector('input[placeholder^=\"What do you want\"]')", "add form");
       await setVal('input[placeholder^="What do you want"]', title);
       if (minutes) await setVal('input[placeholder="e.g. 20"]', String(minutes));
+      await waitFor("[...document.querySelectorAll('button')].some(b => b.textContent.includes('Add to my day') && !b.disabled)", "add enabled");
       await click("Add to my day", "button");
-      await waitText(title, `task ${title} added`);
-      await sleep(300);
+      // saved = the form closed (it only closes after the server confirms) and the task is shown
+      try {
+        await waitFor(`!document.querySelector('input[placeholder^="What do you want"]') && document.body.innerText.includes(${JSON.stringify(title)})`, `task ${title} saved`, 240);
+      } catch (err) {
+        const shot = await cdp("Page.captureScreenshot", { format: "png" });
+        fs.writeFileSync(path.join(os.tmpdir(), "tinywins-e2e-failure.png"), Buffer.from(shot.data, "base64"));
+        throw err;
+      }
     };
 
     await cdp("Page.enable");
@@ -157,17 +172,21 @@ const check = (name, ok, detail = "") => results.push([ok ? "PASS" : "FAIL", nam
     const left = await ev(`document.querySelectorAll('article').length`);
     check("lighter day keeps 3 tasks today", left === 3, `${left} tasks`);
 
-    await go("/now");
-    check("focus mode shows one task", (await ev(`document.querySelectorAll('h1').length`)) === 1 && (await text()).includes("Right now, just this"));
-    await click("Just 2 min", "button");
+    await goApp("/now");
+    check("focus mode shows one task", (await ev(`document.querySelectorAll('h1').length`)) === 1 && (await text()).toLowerCase().includes("right now, just this"));
+    // the page may still be hydrating: click until the timer starts
+    for (let i = 0; i < 10 && !(await text()).includes("Focus time"); i++) {
+      await click("Just 2 min", "button");
+      await sleep(700);
+    }
     await waitText("Focus time", "timer running");
     check("focus timer starts", true);
     await click("Stop", "button");
 
-    await go("/wins");
+    await goApp("/wins");
     check("points and badges shown", (await text()).includes("points to spend") && (await text()).includes("Badges"));
 
-    await go("/settings");
+    await goApp("/settings");
     check("settings load", (await text()).includes("Reminders") && (await text()).includes("Time zone"));
 
     await signIn("other");
@@ -179,10 +198,12 @@ const check = (name, ok, detail = "") => results.push([ok ? "PASS" : "FAIL", nam
 
     check("no uncaught browser errors", errors.length === 0, errors.join(" | "));
   } catch (e) {
-    check("run completed", false, e.message);
+    check("run completed", false, `${e.message}${errors.length ? ` | browser errors: ${errors.join(" | ")}` : ""}`);
   } finally {
     edge.kill();
     for (const p of Object.values(people)) {
+      // look the user up by email too, in case sign-up timed out before we learned the id
+      if (!p.id && p.email) p.id = (await users.list({ queries: [Query.equal("email", p.email)] }).catch(() => ({ users: [] }))).users[0]?.$id ?? null;
       if (!p.id) continue;
       for (const tableId of TABLES) await tables.deleteRows({ databaseId: "tinywins", tableId, queries: [Query.equal("userId", p.id)] }).catch(() => {});
       await users.delete({ userId: p.id }).catch(() => {});

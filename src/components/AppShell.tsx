@@ -26,7 +26,20 @@ function ErrorToast() {
 }
 
 function Loading({ children }: { children: React.ReactNode }) {
-  const { ready } = useStore();
+  const { ready, loadFailed, reload, clearError } = useStore();
+  if (!ready && loadFailed) {
+    return (
+      <div className="grid min-h-[60vh] place-items-center text-center">
+        <div>
+          <div className="text-5xl" aria-hidden>🌧️</div>
+          <p className="mt-2 font-bold text-slate-600 dark:text-slate-300">Couldn&apos;t load your day just now.</p>
+          <button className="mt-4 rounded-2xl bg-gradient-to-r from-violet-500 to-fuchsia-500 px-5 py-3 font-extrabold text-white" onClick={() => { clearError(); reload(); }}>
+            Try again
+          </button>
+        </div>
+      </div>
+    );
+  }
   if (!ready) {
     return (
       <div className="grid min-h-[60vh] place-items-center">

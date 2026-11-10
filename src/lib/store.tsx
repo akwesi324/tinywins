@@ -13,6 +13,7 @@ export type NewTask = { date: string; title: string; emoji: string; color: Color
 
 type Store = {
   ready: boolean;
+  loadFailed: boolean;
   state: State;
   name: string;
   today: string;
@@ -56,6 +57,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [error, setError] = useState<string | null>(null);
   const [celebration, setCelebration] = useState<Celebration | null>(null);
   const [today, setToday] = useState("");
+  const [loadFailed, setLoadFailed] = useState(false);
   const stateRef = useRef(state);
   const counter = useRef(0);
 
@@ -72,12 +74,17 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   }, [state.settings.timezone]);
 
   const reload = useCallback(async () => {
-    const res = await api.loadAll();
-    if (!res.ok || !res.value) {
-      setError(res.ok ? "Couldn't load your plans." : res.error);
-      if (!res.ok && res.error.includes("Sign in")) router.replace("/login");
+    // one quiet retry: a slow network shouldn't leave anyone staring at a spinner
+    let res = await api.loadAll().catch(() => null);
+    if (!res?.ok) res = await api.loadAll().catch(() => null);
+    if (!res || !res.ok || !res.value) {
+      const message = res && !res.ok ? res.error : "Couldn't reach TinyWins. Check your connection.";
+      if (message.includes("Sign in")) return router.replace("/login");
+      setError(message);
+      setLoadFailed(true);
       return;
     }
+    setLoadFailed(false);
     const { name: n, ...s } = res.value;
     setName(n);
     apply(s);
@@ -120,6 +127,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
   const store: Store = {
     ready,
+    loadFailed,
     state,
     name,
     today,

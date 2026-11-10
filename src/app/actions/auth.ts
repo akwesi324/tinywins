@@ -4,7 +4,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { AppwriteException, ID } from "node-appwrite";
 import { z } from "zod";
-import { SESSION_COOKIE, adminClient, guestAccount, sessionClient } from "@/lib/appwrite";
+import { SESSION_COOKIE, TimeoutError, adminClient, guestAccount, sessionClient, withTimeout } from "@/lib/appwrite";
 import { seedRewards, savePrefs } from "@/lib/data";
 import { DEFAULT_SETTINGS } from "@/lib/types.ts";
 import { siteUrl } from "@/lib/env";
@@ -36,8 +36,9 @@ export async function signIn(_: FormState, form: FormData): Promise<FormState> {
   const parsed = z.object({ email, password: z.string().min(1).max(256) }).safeParse({ email: form.get("email"), password: form.get("password") });
   if (!parsed.success) return { error: "Enter your email and password." };
   try {
-    await startSession(parsed.data.email, parsed.data.password);
+    await withTimeout(startSession(parsed.data.email, parsed.data.password));
   } catch (e) {
+    if (e instanceof TimeoutError) return { error: "Signing in is taking too long. Try again in a moment." };
     if (e instanceof AppwriteException && e.code === 429) return { error: "Too many tries. Take a short break and try again in a few minutes." };
     return { error: "That email and password don't match. Try again?" };
   }
@@ -51,19 +52,25 @@ export async function register(_: FormState, form: FormData): Promise<FormState>
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Check the form." };
   const v = parsed.data;
   try {
-    const user = await adminClient().users.create({ userId: ID.unique(), email: v.email, password: v.password, name: v.display_name });
-    const { timezone: _tz, ...settings } = DEFAULT_SETTINGS;
-    void _tz;
-    await savePrefs(user.$id, { timezone: v.timezone, settings, lastCongrats: -1 });
-    await seedRewards(user.$id);
-    await startSession(v.email, v.password);
+    await withTimeout(createAccount(v));
   } catch (e) {
+    if (e instanceof TimeoutError) return { error: "That's taking too long. Try signing in: your account may already be ready." };
     if (e instanceof AppwriteException && e.code === 409) return { error: "You already have an account. Sign in instead!" };
     if (e instanceof AppwriteException && e.code === 400) return { error: e.message.includes("password") ? "Pick a stronger password (not a common one)." : "Check your details and try again." };
     console.error("register failed", e);
     return { error: "Could not create your account. Try again." };
   }
   redirect("/");
+}
+
+/** Creates the user, their preferences and starter rewards, then signs them in. */
+async function createAccount(v: { display_name: string; email: string; password: string; timezone: string }) {
+  const user = await adminClient().users.create({ userId: ID.unique(), email: v.email, password: v.password, name: v.display_name });
+  const { timezone: _tz, ...settings } = DEFAULT_SETTINGS;
+  void _tz;
+  await savePrefs(user.$id, { timezone: v.timezone, settings, lastCongrats: -1 });
+  await seedRewards(user.$id);
+  await startSession(v.email, v.password);
 }
 
 export async function signOut() {

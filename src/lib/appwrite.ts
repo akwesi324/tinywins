@@ -84,3 +84,10 @@ export async function requireUser(): Promise<SessionUser> {
 
 /** Appwrite ids: 20 lowercase letters/digits (we create them so writes can be optimistic). */
 export const isId = (v: unknown): v is string => typeof v === "string" && /^[a-z0-9]{20}$/.test(v);
+
+export class TimeoutError extends Error {}
+
+/** Gives up waiting after `ms` (Appwrite occasionally stalls; the user then sees a clear message). */
+export function withTimeout<T>(work: Promise<T>, ms = 20000): Promise<T> {
+  return Promise.race([work, new Promise<T>((_, reject) => setTimeout(() => reject(new TimeoutError("TIMEOUT")), ms))]);
+}

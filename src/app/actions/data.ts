@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 import { AppwriteException } from "node-appwrite";
-import { DB, T, adminClient, isId, requireUser, type Prefs } from "@/lib/appwrite";
+import { DB, T, TimeoutError, adminClient, isId, requireUser, withTimeout, type Prefs } from "@/lib/appwrite";
 import * as data from "@/lib/data";
 import { BADGES } from "@/lib/logic.ts";
 import { todayIn } from "@/lib/dates.ts";
@@ -37,9 +37,10 @@ const taskShape = z.object({
 
 async function run<T>(fn: (userId: string) => Promise<T>): Promise<Result<T>> {
   try {
-    const user = await requireUser();
-    return { ok: true, value: await fn(user.id) };
+    const user = await withTimeout(requireUser());
+    return { ok: true, value: await withTimeout(fn(user.id)) };
   } catch (e) {
+    if (e instanceof TimeoutError) return { ok: false, error: "That's taking too long. Check your connection and try again." };
     if (e instanceof data.CapError) return { ok: false, error: e.message };
     if (e instanceof Error && e.message === "UNAUTHENTICATED") return { ok: false, error: "Your session ended. Sign in again." };
     if (e instanceof Error && e.message === "NOT_FOUND") return { ok: false, error: "That task no longer exists." };
@@ -51,9 +52,10 @@ async function run<T>(fn: (userId: string) => Promise<T>): Promise<Result<T>> {
 
 export async function loadAll(): Promise<Result<State & { name: string }>> {
   try {
-    const user = await requireUser();
-    return { ok: true, value: await data.loadState(user) };
-  } catch {
+    const user = await withTimeout(requireUser());
+    return { ok: true, value: await withTimeout(data.loadState(user), 25000) };
+  } catch (e) {
+    if (e instanceof TimeoutError) return { ok: false, error: "Loading is taking too long. Check your connection and try again." };
     return { ok: false, error: "Your session ended. Sign in again." };
   }
 }

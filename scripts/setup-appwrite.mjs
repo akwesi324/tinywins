@@ -88,7 +88,9 @@ async function waitForColumns(tableId) {
 }
 
 console.log(`Appwrite project ${APPWRITE_PROJECT_ID}`);
-await ignoreExisting(db.create({ databaseId: DB, name: "TinyWins" }));
+// the free plan allows one database, so check before creating (a second create is refused, not "exists")
+const haveDb = await db.get({ databaseId: DB }).then(() => true, (err) => (err instanceof AppwriteException && err.code === 404 ? false : Promise.reject(err)));
+if (!haveDb) await db.create({ databaseId: DB, name: "TinyWins" });
 for (const [tableId, spec] of Object.entries(TABLES)) {
   // no table permissions: only the server (API key) reads or writes; it scopes every query to the user
   await ignoreExisting(db.createTable({ databaseId: DB, tableId, name: tableId, permissions: [], rowSecurity: false }));
@@ -104,8 +106,10 @@ if (!SITE_URL || !CRON_SECRET) {
 }
 
 const FUNCTION_ID = "reminder-trigger";
-const runtimes = (await fn.listRuntimes()).runtimes.map((r) => r.key).filter((k) => /^node-\d+/.test(k)).sort((a, b) => parseFloat(b.slice(5)) - parseFloat(a.slice(5)));
-const runtime = runtimes.find((r) => ["node-22", "node-20.0", "node-21.0"].includes(r)) ?? runtimes[0];
+// runtime ids look like "node-22" (the `key` field is just "node")
+const runtimes = (await fn.listRuntimes()).runtimes.map((r) => r.$id).filter((k) => /^node-\d+/.test(k)).sort((a, b) => parseFloat(b.slice(5)) - parseFloat(a.slice(5)));
+const runtime = runtimes.find((r) => r === "node-22") ?? runtimes.find((r) => parseFloat(r.slice(5)) <= 22) ?? runtimes[0];
+if (!runtime) throw new Error("No Node.js runtime is available in this Appwrite project.");
 const settings = { name: "Reminder trigger", runtime, execute: [], schedule: "* * * * *", timeout: 60, entrypoint: "src/main.js", commands: "", logging: true, enabled: true };
 try {
   await fn.create({ functionId: FUNCTION_ID, ...settings });
