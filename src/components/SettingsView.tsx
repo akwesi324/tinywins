@@ -45,7 +45,7 @@ export default function SettingsView({ vapidKey }: { vapidKey: string | null }) 
       if (!res.ok) throw new Error();
       await saveSettings({ notifications: true });
       setPush("on");
-      reg.showNotification("Reminders are on! 🔔", { body: "TinyWins will nudge you until your tasks are done.", icon: "/icon.svg" });
+      reg.showNotification("Reminders are on", { body: "TinyWins will nudge you until your tasks are done.", icon: "/icon.svg" });
     } catch {
       setPush("off");
       setMessage("Couldn't turn on reminders in this browser. Try again, or check the site's notification permission.");
@@ -66,37 +66,37 @@ export default function SettingsView({ vapidKey }: { vapidKey: string | null }) 
 
   return (
     <div className="space-y-6">
-      <h1 className="bg-gradient-to-r from-sky-500 to-violet-500 bg-clip-text text-3xl font-black text-transparent">Settings ⚙️</h1>
+      <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Settings</h1>
 
       <section className={`${panel} space-y-3`}>
-        <h2 className="text-xl font-black text-slate-900 dark:text-white">Reminders 🔔</h2>
-        <p className="font-semibold text-slate-600 dark:text-slate-300">
+        <h2 className="text-lg font-bold text-slate-900 dark:text-white">Reminders</h2>
+        <p className="text-slate-600 dark:text-slate-300">
           Turn these on so TinyWins can remind you even when this page is closed. Each reminder has Done and Snooze buttons.
         </p>
         {push === "on" && <button className={btn.soft} onClick={disablePush}>Turn off reminders on this device</button>}
         {push === "off" && <button className={btn.primary} onClick={enablePush}>Turn on reminders</button>}
-        {push === "working" && <p className="font-bold text-slate-500">One moment...</p>}
-        {push === "blocked" && <p className="font-semibold text-rose-600">Notifications are blocked for this site. Allow them in your browser&apos;s site settings, then come back.</p>}
-        {push === "unsupported" && <p className="font-semibold text-slate-500">This browser can&apos;t receive reminders while TinyWins is closed. Keep TinyWins open in a tab and you&apos;ll still get on-screen reminders.</p>}
-        <p className="text-sm font-semibold text-slate-500">On iPhone: tap Share → &ldquo;Add to Home Screen&rdquo;, open TinyWins from there, then turn reminders on.</p>
-        {message && <p className="font-semibold text-rose-600">{message}</p>}
-        <label className="flex items-center gap-3 font-bold">
-          <input type="checkbox" checked={s.sound} onChange={(e) => saveSettings({ sound: e.target.checked })} className="h-6 w-6 accent-fuchsia-500" />
+        {push === "working" && <p className="text-slate-500">One moment...</p>}
+        {push === "blocked" && <p className="text-rose-600">Notifications are blocked for this site. Allow them in your browser&apos;s site settings, then come back.</p>}
+        {push === "unsupported" && <p className="text-slate-500">This browser can&apos;t receive reminders while TinyWins is closed. Keep TinyWins open in a tab and you&apos;ll still get on-screen reminders.</p>}
+        <p className="text-sm text-slate-500">On iPhone: tap Share → &ldquo;Add to Home Screen&rdquo;, open TinyWins from there, then turn reminders on.</p>
+        {message && <p className="text-rose-600">{message}</p>}
+        <label className="flex items-center gap-3 font-medium">
+          <input type="checkbox" checked={s.sound} onChange={(e) => saveSettings({ sound: e.target.checked })} className="h-5 w-5 accent-indigo-600" />
           Play a chime with reminders and wins
         </label>
       </section>
 
       <section className={`${panel} space-y-3`}>
-        <h2 className="text-xl font-black text-slate-900 dark:text-white">Focus timer 🎯</h2>
+        <h2 className="text-lg font-bold text-slate-900 dark:text-white">Focus timer</h2>
         <div className="grid grid-cols-2 gap-3">
           <label className="space-y-1">
-            <span className="text-sm font-extrabold text-slate-500">Focus minutes</span>
+            <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">Focus minutes</span>
             <select value={s.focusMin} onChange={(e) => saveSettings({ focusMin: Number(e.target.value) })} className={input}>
               {[5, 10, 15, 20, 25, 30, 45].map((m) => <option key={m} value={m}>{m}</option>)}
             </select>
           </label>
           <label className="space-y-1">
-            <span className="text-sm font-extrabold text-slate-500">Break minutes</span>
+            <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">Break minutes</span>
             <select value={s.breakMin} onChange={(e) => saveSettings({ breakMin: Number(e.target.value) })} className={input}>
               {[3, 5, 10, 15].map((m) => <option key={m} value={m}>{m}</option>)}
             </select>
@@ -105,8 +105,8 @@ export default function SettingsView({ vapidKey }: { vapidKey: string | null }) 
       </section>
 
       <section className={`${panel} space-y-3`}>
-        <h2 className="text-xl font-black text-slate-900 dark:text-white">Time zone 🌍</h2>
-        <p className="font-semibold text-slate-600 dark:text-slate-300">Reminders use this to know when your day starts.</p>
+        <h2 className="text-lg font-bold text-slate-900 dark:text-white">Time zone</h2>
+        <p className="text-slate-600 dark:text-slate-300">Reminders use this to know when your day starts.</p>
         <select value={s.timezone} onChange={(e) => saveSettings({ timezone: e.target.value })} className={input}>
           {zones.map((z) => <option key={z} value={z}>{z}</option>)}
         </select>

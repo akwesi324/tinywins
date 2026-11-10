@@ -1,23 +1,23 @@
 import type { Metadata, Viewport } from "next";
-import { Nunito } from "next/font/google";
+import { Manrope } from "next/font/google";
 import "./globals.css";
 
-const nunito = Nunito({ subsets: ["latin"], weight: ["400", "600", "700", "800", "900"], display: "swap" });
+const manrope = Manrope({ subsets: ["latin"], weight: ["400", "500", "600", "700", "800"], display: "swap" });
 
 export const metadata: Metadata = {
   title: { default: "TinyWins", template: "%s | TinyWins" },
-  description: "A colourful day planner for ADHD brains: 5 tasks a day, reminders until they're done, and a celebration for every win.",
+  description: "A day planner built for ADHD: five tasks a day, reminders until they're done, and real progress you can see.",
   manifest: "/manifest.webmanifest",
   icons: { icon: "/icon.svg", apple: "/icon.svg" },
   appleWebApp: { capable: true, title: "TinyWins", statusBarStyle: "default" },
 };
 
-export const viewport: Viewport = { themeColor: "#d946ef", width: "device-width", initialScale: 1 };
+export const viewport: Viewport = { themeColor: "#4f46e5", width: "device-width", initialScale: 1 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en">
-      <body className={`${nunito.className} antialiased`}>{children}</body>
+      <body className={`${manrope.className} antialiased`}>{children}</body>
     </html>
   );
 }

@@ -117,12 +117,14 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     [apply],
   );
 
-  const awardAndSave = useCallback(async (next: State) => {
+  /** Works out new badges right away (so the celebration is instant) and saves them in the background. */
+  const awardAndSave = useCallback((next: State) => {
     const { state: withBadges, fresh } = awardBadges(next, todayIn(next.settings.timezone), new Date());
-    if (fresh.length) await api.saveBadges(fresh.map((b) => b.id));
+    if (fresh.length) void api.saveBadges(fresh.map((b) => b.id));
     return { next: withBadges, fresh };
   }, []);
 
+  const dismissNow = () => setCelebration(null);
   const replaceTask = (s: State, t: Task): State => ({ ...s, tasks: s.tasks.map((x) => (x.id === t.id ? t : x)) });
 
   const store: Store = {
@@ -159,9 +161,13 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       const done = !task.done;
       const merged: Task = { ...task, done, doneAt: done ? new Date().toISOString() : null, snoozedUntil: null, steps: done ? task.steps.map((x) => ({ ...x, done: true })) : task.steps };
       let next = replaceTask(s, merged);
-      const ok = await commit(next, () => api.updateTask(id, { done: merged.done, doneAt: merged.doneAt, snoozedUntil: null, steps: merged.steps }));
-      if (!ok || !done) return;
-      const award = await awardAndSave(next);
+      if (!done) {
+        await commit(next, () => api.updateTask(id, { done: false, doneAt: null, snoozedUntil: null, steps: merged.steps }));
+        return;
+      }
+      // Celebrate immediately; the save runs alongside and is rolled back with a message if it fails.
+      const saving = commit(next, () => api.updateTask(id, { done: true, doneAt: merged.doneAt, snoozedUntil: null, steps: merged.steps }));
+      const award = awardAndSave(next);
       next = award.next;
       const day = next.tasks.filter((t) => t.date === merged.date);
       const perfect = day.length === 5 && day.every((t) => t.done);
@@ -169,7 +175,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       if (!perfect) next = { ...next, lastCongrats: msg.index };
       apply(next);
       celebrate(perfect ? "perfect" : "task", msg.text, award.fresh);
-      if (!perfect) api.savePrefs(next.settings, msg.index);
+      if (!(await saving)) return dismissNow();
+      if (!perfect) void api.savePrefs(next.settings, msg.index);
     },
 
     toggleStep: async (taskId, stepId) => {
@@ -181,11 +188,11 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       let next = replaceTask(s, { ...task, steps });
       const ok = await commit(next, () => api.updateTask(taskId, { steps }));
       if (!ok || !checked) return;
-      const award = await awardAndSave(next);
+      const award = awardAndSave(next);
       next = award.next;
       apply(next);
       if (award.fresh.length) celebrate("badge", "New badge unlocked!", award.fresh);
-      else if (steps.every((x) => x.done)) celebrate("step", "All steps done! Tap Done to finish the task. 🎯");
+      else if (steps.every((x) => x.done)) celebrate("step", "All steps done. Mark the task done to finish it.");
       else celebrate("step", pickMessage(STEP_CHEERS, -1).text);
     },
 
@@ -233,10 +240,10 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         tasks: s.tasks.map((t) => (t.id === taskId ? { ...t, focusSeconds: Math.min(86400, t.focusSeconds + minutes * 60) } : t)),
       };
       if (!(await commit(next, () => api.logFocus(taskId, date, minutes)))) return;
-      const award = await awardAndSave(next);
+      const award = awardAndSave(next);
       next = award.next;
       apply(next);
-      celebrate(award.fresh.length ? "badge" : "step", `Focus session done: ${minutes} minutes of real work! 🎯`, award.fresh);
+      celebrate(award.fresh.length ? "badge" : "step", `Focus session done: ${minutes} minutes.`, award.fresh);
     },
 
     addReward: async (title, emoji, cost) => {
@@ -257,10 +264,10 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         let next = claimRule(s, id, new Date());
         const c = next.claims.at(-1)!;
         if (!(await commit(next, () => api.claimReward(id, c.title, c.cost)))) return false;
-        const award = await awardAndSave(next);
+        const award = awardAndSave(next);
         next = award.next;
         apply(next);
-        celebrate(award.fresh.length ? "badge" : "task", `Enjoy it: ${c.title}! You earned it. 🎁`, award.fresh);
+        celebrate(award.fresh.length ? "badge" : "task", `Enjoy it: ${c.title}. You earned it.`, award.fresh);
         return true;
       } catch (e) {
         setError(e instanceof Error ? e.message : "Couldn't claim that reward.");
@@ -288,7 +295,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         for (let i = 0; i < 14 && slotsLeft(stateRef.current, target) === 0; i++) target = addDays(target, 1);
         if (await store.moveTask(t.id, target)) moved += 1;
       }
-      if (moved) celebrate("step", `Moved ${moved} to later. Today is lighter now. 💜`);
+      if (moved) celebrate("step", `Moved ${moved} to later. Today is lighter now.`);
       return moved;
     },
 

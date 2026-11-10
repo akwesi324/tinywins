@@ -12,13 +12,13 @@ function Submit({ children, pending }: { children: React.ReactNode; pending: str
 }
 
 function Message({ state }: { state: FormState }) {
-  if (state?.error) return <p role="alert" className="rounded-2xl bg-rose-100 p-3 font-bold text-rose-800 dark:bg-rose-950 dark:text-rose-200">{state.error}</p>;
-  if (state?.ok) return <p role="status" className="rounded-2xl bg-emerald-100 p-3 font-bold text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200">{state.ok}</p>;
+  if (state?.error) return <p role="alert" className="rounded-xl bg-rose-50 p-3 text-sm font-medium text-rose-800 dark:bg-rose-500/10 dark:text-rose-300">{state.error}</p>;
+  if (state?.ok) return <p role="status" className="rounded-xl bg-emerald-50 p-3 text-sm font-medium text-emerald-800 dark:bg-emerald-500/10 dark:text-emerald-300">{state.ok}</p>;
   return null;
 }
 
 const label = "space-y-1 block";
-const span = "text-sm font-extrabold text-slate-500";
+const span = "text-sm font-semibold text-slate-700 dark:text-slate-300";
 
 export function LoginForm({ next }: { next?: string }) {
   const [state, action] = useActionState(signIn, undefined);
@@ -29,7 +29,7 @@ export function LoginForm({ next }: { next?: string }) {
       <label className={label}><span className={span}>Password</span><input type="password" name="password" required autoComplete="current-password" className={input} /></label>
       <Message state={state} />
       <Submit pending="Signing in...">Sign in</Submit>
-      <p className="text-center font-bold"><Link href="/forgot-password" className="text-fuchsia-600">Forgot your password?</Link></p>
+      <p className="text-center font-bold"><Link href="/forgot-password" className="text-sm font-semibold text-indigo-600 dark:text-indigo-400">Forgot your password?</Link></p>
     </form>
   );
 }
@@ -45,7 +45,7 @@ export function RegisterForm() {
       <label className={label}><span className={span}>Email</span><input type="email" name="email" required autoComplete="email" className={input} /></label>
       <label className={label}><span className={span}>Password (at least 8 characters)</span><input type="password" name="password" required minLength={8} maxLength={72} autoComplete="new-password" className={input} /></label>
       <Message state={state} />
-      <Submit pending="Creating your account...">Let&apos;s go! 🚀</Submit>
+      <Submit pending="Creating your account...">Create account</Submit>
     </form>
   );
 }
@@ -56,7 +56,7 @@ export function ForgotForm() {
     <form action={action} className="space-y-4">
       <label className={label}><span className={span}>Email</span><input type="email" name="email" required autoComplete="email" className={input} /></label>
       <Message state={state} />
-      <Submit pending="Sending...">Send me a reset link</Submit>
+      <Submit pending="Sending...">Send reset link</Submit>
     </form>
   );
 }

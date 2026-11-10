@@ -1,35 +1,30 @@
 // Celebration messages. Warm, specific, never sarcastic.
 
 export const CONGRATS = [
-  "YES! You did it! 🎉",
-  "Look at you go! That's one more win. 🌟",
-  "Boom! Task crushed. 💥",
-  "You started, and you finished. That's the hard part! 🙌",
-  "Your brain said 'later', you said 'now'. Legend. 🦸",
-  "Done and dusted! ✨",
-  "That's a tiny win, and tiny wins add up! 🌱",
-  "High five! ✋ Future you says thanks.",
-  "You showed up for yourself today. 💖",
-  "Another one bites the dust! 🎸",
-  "Checked off! Feel that? That's momentum. 🚀",
-  "Nailed it! 🔨",
-  "You turned a plan into a win. 🏆",
-  "Proud of you. Seriously. 🌈",
-  "Victory dance time! 💃🕺",
-  "One step closer to an awesome day! ☀️",
-  "Mission accomplished! 🛰️",
-  "That was brave. Starting is hard, and you did it. 🦁",
-  "Goal reached. Treat yourself kindly today. 🍦",
-  "Brilliant! Your focus paid off. 🎯",
-];
+  "Done. That's real progress.",
+  "Nice work. One more off your plate.",
+  "You started and you finished. That's the hard part.",
+  "Checked off. Momentum is building.",
+  "That's a win. Future you will notice.",
+  "Good job following through.",
+  "Done and dusted.",
+  "Another one finished. Keep the streak of small wins going.",
+  "You showed up for yourself today.",
+  "Finished. Take a breath before the next one.",
+  "Solid. That task is no longer living in your head.",
+  "You beat the 'later'. Well done.",
+  "Progress, not perfection, and that was progress.",
+  "That took focus. Nicely done.",
+  "Off the list. Enjoy that feeling for a second.",
+]
 
 export const PERFECT_DAY = [
-  "ALL FIVE DONE! 🌈 That's a perfect day. You are amazing!",
-  "5 out of 5! 🏆 Take a bow, you earned it.",
-  "Perfect day unlocked! 🎆 Go celebrate, you deserve it.",
-];
+  "All five done. That's a full day, and you finished it.",
+  "Five out of five. Everything you planned, done.",
+  "A complete day. Take the rest of it off your mind.",
+]
 
-export const STEP_CHEERS = ["Nice step! 👣", "Keep going! 💪", "Tiny step, big deal! ⭐", "Look at that progress! 📈", "On a roll! 🛼"];
+export const STEP_CHEERS = ["Step done.", "Good, keep going.", "One step closer.", "Nice, that's moving.", "Progress."]
 
 /** Picks a message different from the last one shown. */
 export function pickMessage(list: string[], last: number, random = Math.random): { text: string; index: number } {

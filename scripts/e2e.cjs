@@ -76,7 +76,7 @@ const check = (name, ok, detail = "") => results.push([ok ? "PASS" : "FAIL", nam
       throw new Error(`timeout: ${what} @ ${await ev("location.href")} :: ${(await text()).replace(/\s+/g, " ").slice(0, 1500)}`);
     };
     const waitText = (t, what) => waitFor(`document.body.innerText.includes(${JSON.stringify(t)})`, what || t);
-    const go = async (p) => { await cdp("Page.navigate", { url: `${BASE}${p}` }); await sleep(400); await waitFor("document.readyState === 'complete'", `load ${p}`); };
+    const go = async (p) => { await cdp("Page.navigate", { url: `${BASE}${p}` }); await sleep(400); await waitFor("document.readyState !== 'loading'", `load ${p}`); await sleep(800); };
     /** Opens an in-app page and waits until the app has loaded the user's data. */
     const goApp = async (p) => {
       await go(p);
@@ -94,7 +94,7 @@ const check = (name, ok, detail = "") => results.push([ok ? "PASS" : "FAIL", nam
       await setVal("input[name=display_name]", `E2E ${who}`);
       await setVal("input[name=email]", people[who].email);
       await setVal("input[name=password]", password);
-      await click("Let's go", "button");
+      await click("Create account", "button");
       await waitFor("location.pathname === '/' && !document.body.innerText.includes('Getting your day ready')", `${who} registered`, 240);
       const found = await users.list({ queries: [Query.equal("email", people[who].email)] });
       people[who].id = found.users[0]?.$id ?? null;
@@ -130,7 +130,25 @@ const check = (name, ok, detail = "") => results.push([ok ? "PASS" : "FAIL", nam
     await cdp("Network.enable");
 
     await go("/");
-    check("signed-out visitors see the welcome page", (await ev("location.pathname")) === "/welcome" && (await text()).includes("Plan small. Win big."));
+    await waitFor("location.pathname === '/welcome' && document.body.innerText.includes('Plan less. Finish more.')", "welcome page").catch(() => {});
+    check("signed-out visitors see the welcome page", (await ev("location.pathname")) === "/welcome" && (await text()).includes("Plan less. Finish more."));
+    // the feature tour: one card at a time, Next until the last, then Get started -> sign-up
+    const counter = () => ev("(document.querySelector('[aria-live=polite]')?.textContent || '').trim().split(' ')[0]");
+    for (let n = 0; n < 30 && (await counter()) !== "6"; n++) {
+      const before = await counter();
+      await click("Next", "button");
+      for (let w = 0; w < 10 && (await counter()) === before; w++) await sleep(200); // also waits out hydration
+    }
+    const shot = await cdp("Page.captureScreenshot", { format: "png" });
+    fs.writeFileSync(path.join(os.tmpdir(), "tinywins-tour-last.png"), Buffer.from(shot.data, "base64"));
+    check("tour advances one card at a time to the last", (await counter()) === "6", `at ${await counter()} / 6`);
+    check("last card offers Get started", await ev("[...document.querySelectorAll('button')].some(b => b.textContent.trim().startsWith('Get started'))"));
+    for (let n = 0; n < 5 && (await ev("location.pathname")) !== "/register"; n++) {
+      await click("Get started", "button").catch(() => {});
+      await waitFor("location.pathname === '/register'", "Get started opens sign-up", 60).catch(() => {});
+    }
+    await waitFor("location.pathname === '/register'", "Get started opens sign-up");
+    check("Get started opens sign-up", true);
 
     await register("other");
     await register("main");
@@ -146,7 +164,7 @@ const check = (name, ok, detail = "") => results.push([ok ? "PASS" : "FAIL", nam
     await addTask(`Tidy desk ${tag}`, 15);
     await addTask(`Call mum ${tag}`, 20);
     await addTask(`Pay bill ${tag}`, 10);
-    check("five tasks added", (await text()).includes("5 is the magic number"));
+    check("five tasks added", (await text()).includes("the limit for one day"));
     const order = await ev(`[...document.querySelectorAll('article h3')].map(h => h.textContent)`);
     check("easiest task listed first on a low day", order[0].startsWith("Drink water"), order.join(" | "));
     check("'Just 2 minutes' start offered", (await text()).includes("Just 2 minutes"));
@@ -162,9 +180,9 @@ const check = (name, ok, detail = "") => results.push([ok ? "PASS" : "FAIL", nam
 
     await ev(`document.querySelector('article button[aria-label^="Mark Drink water"]').click()`);
     await waitFor("!!document.querySelector('[role=alertdialog]')", "celebration");
-    check("finishing a task shows a celebration", (await text()).includes("Keep going"));
+    check("finishing a task shows a celebration", (await text()).includes("Continue"));
     check("first badge awarded", (await text()).includes("First win"));
-    await click("Yay! Keep going", "button");
+    await click("Continue", "button");
     await sleep(500);
 
     await click("Keep 3 today", "button");
@@ -191,7 +209,7 @@ const check = (name, ok, detail = "") => results.push([ok ? "PASS" : "FAIL", nam
 
     await signIn("other");
     await waitText("How's your energy today?", "other user's check-in");
-    await click("Okay", "button");
+    await click("Steady", "button");
     await sleep(800);
     const otherText = await text();
     check("another user sees none of these tasks", !otherText.includes(tag), "");

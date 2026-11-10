@@ -8,20 +8,21 @@ import { COLOR, EMOJIS, btn, input, panel } from "@/lib/colors";
 import { COLORS, MAX_TASKS_PER_DAY, type ColorKey, type Task } from "@/lib/types.ts";
 import { addDays, formatDuration, minutesBetween, relative } from "@/lib/dates.ts";
 import { dayPosition } from "@/lib/logic.ts";
+import { IconCheck, IconClock, IconFocus, IconPlay, IconSnooze } from "@/components/icons";
 
 // ------------------------------------------------------------------ slots + timeline
 
 export function Slots({ tasks }: { tasks: Task[] }) {
+  const done = tasks.filter((t) => t.done).length;
   return (
-    <div className="flex items-center gap-2" aria-label={`${tasks.filter((t) => t.done).length} of ${tasks.length} done, ${MAX_TASKS_PER_DAY - tasks.length} slots free`}>
-      {Array.from({ length: MAX_TASKS_PER_DAY }, (_, i) => {
-        const t = tasks[i];
-        return (
-          <span key={i} className={`grid h-9 w-9 place-items-center rounded-full text-lg transition ${t ? (t.done ? `${COLOR[t.color].solid} scale-110 shadow-lg` : `${COLOR[t.color].soft} ring-2 ${COLOR[t.color].ring}`) : "border-2 border-dashed border-slate-300 dark:border-slate-700"}`}>
-            {t ? (t.done ? "✓" : t.emoji) : ""}
-          </span>
-        );
-      })}
+    <div className="space-y-2" aria-label={`${done} of ${tasks.length} done, ${MAX_TASKS_PER_DAY - tasks.length} slots free`}>
+      <div className="flex gap-1.5">
+        {Array.from({ length: MAX_TASKS_PER_DAY }, (_, i) => {
+          const t = tasks[i];
+          return <span key={i} className={`h-2 flex-1 rounded-full transition ${t ? (t.done ? COLOR[t.color].bar : `${COLOR[t.color].bar} opacity-30`) : "bg-slate-200 dark:bg-slate-800"}`} />;
+        })}
+      </div>
+      <p className="text-xs font-medium text-slate-500">{tasks.length} of {MAX_TASKS_PER_DAY} slots used · {done} done</p>
     </div>
   );
 }
@@ -32,19 +33,15 @@ export function DayTimeline({ tasks, isToday }: { tasks: Task[]; isToday: boolea
   const timed = tasks.filter((t) => t.startsAt != null);
   const pos = now ? dayPosition(now) : 0;
   return (
-    <div className="pt-2">
-      <div className="relative h-4 rounded-full bg-gradient-to-r from-amber-200 via-sky-200 to-violet-300 dark:from-amber-900/60 dark:via-sky-900/60 dark:to-violet-900/60">
-        {isToday && now > 0 && <div className="absolute inset-y-0 left-0 rounded-full bg-slate-900/15 dark:bg-white/15" style={{ width: `${pos * 100}%` }} />}
+    <div className="pt-3">
+      <div className="relative h-2 rounded-full bg-slate-100 dark:bg-slate-800">
+        {isToday && now > 0 && <div className="absolute inset-y-0 left-0 rounded-full bg-slate-300 dark:bg-slate-600" style={{ width: `${pos * 100}%` }} />}
         {timed.map((t) => (
-          <span key={t.id} title={`${t.time} ${t.title}`} className={`absolute -top-1.5 grid h-7 w-7 -translate-x-1/2 place-items-center rounded-full text-sm shadow ${t.done ? "bg-white opacity-60" : COLOR[t.color].solid}`} style={{ left: `${dayPosition(t.startsAt!) * 100}%` }}>
-            {t.done ? "✓" : t.emoji}
-          </span>
+          <span key={t.id} title={`${t.time} ${t.title}`} className={`absolute top-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full ring-2 ring-white dark:ring-slate-900 ${COLOR[t.color].dot} ${t.done ? "opacity-40" : ""}`} style={{ left: `${dayPosition(t.startsAt!) * 100}%` }} />
         ))}
-        {isToday && now > 0 && (
-          <span className="absolute -top-3 h-10 w-1 -translate-x-1/2 rounded-full bg-rose-500 shadow-lg" style={{ left: `${pos * 100}%` }} aria-label="Now" />
-        )}
+        {isToday && now > 0 && <span className="absolute -top-1.5 h-5 w-0.5 -translate-x-1/2 rounded-full bg-indigo-600 dark:bg-indigo-400" style={{ left: `${pos * 100}%` }} aria-label="Now" />}
       </div>
-      <div className="mt-1 flex justify-between text-[11px] font-bold text-slate-400"><span>7:00</span><span>11:00</span><span>15:00</span><span>19:00</span><span>23:00</span></div>
+      <div className="mt-1.5 flex justify-between text-[11px] font-medium text-slate-400"><span>7:00</span><span>11:00</span><span>15:00</span><span>19:00</span><span>23:00</span></div>
     </div>
   );
 }
@@ -63,71 +60,71 @@ export function TaskCard({ task, today, low = false }: { task: Task; today: stri
   const snoozed = task.snoozedUntil && now && task.snoozedUntil > now;
 
   return (
-    <article className={`overflow-hidden rounded-3xl shadow-xl transition ${task.done ? "opacity-75" : ""}`}>
-      <div className={`bg-gradient-to-br ${c.card} p-4 text-white`}>
+    <article className={`flex overflow-hidden rounded-2xl bg-white ring-1 ring-slate-200 transition dark:bg-slate-900 dark:ring-slate-800 ${task.done ? "opacity-60" : ""}`}>
+      <span className={`w-1.5 shrink-0 ${c.bar}`} aria-hidden />
+      <div className="min-w-0 flex-1 space-y-3 p-4">
         <div className="flex items-start gap-3">
-          <span className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-white/25 text-3xl" aria-hidden>{task.emoji}</span>
+          <span className={`grid h-11 w-11 shrink-0 place-items-center rounded-xl text-xl ${c.chip}`} aria-hidden>{task.emoji}</span>
           <div className="min-w-0 flex-1">
-            <h3 className={`text-xl font-black leading-tight drop-shadow-sm ${task.done ? "line-through decoration-4" : ""}`}>{task.title}</h3>
-            <p className="mt-0.5 text-sm font-bold text-white/90">
-              {task.time ? `⏰ ${task.time}` : "Any time today"}
-              {task.estimateMin ? ` · ⏳ ~${task.estimateMin} min` : ""}
-              {task.focusSeconds > 0 ? ` · 🎯 ${formatDuration(task.focusSeconds)} focused` : ""}
+            <h3 className={`text-lg font-bold leading-snug text-slate-900 dark:text-white ${task.done ? "line-through" : ""}`}>{task.title}</h3>
+            <p className="mt-0.5 flex flex-wrap items-center gap-x-3 text-sm text-slate-500">
+              <span className="inline-flex items-center gap-1"><IconClock className="h-3.5 w-3.5" />{task.time ?? "Any time"}</span>
+              {task.estimateMin ? <span>~{task.estimateMin} min</span> : null}
+              {task.focusSeconds > 0 ? <span>{formatDuration(task.focusSeconds)} focused</span> : null}
             </p>
           </div>
           <button onClick={() => toggleDone(task.id)} aria-pressed={task.done} aria-label={task.done ? `Mark ${task.title} not done` : `Mark ${task.title} done`}
-            className={`grid h-14 w-14 shrink-0 place-items-center rounded-full border-4 border-white text-2xl font-black transition active:scale-90 ${task.done ? "bg-white text-emerald-500" : "bg-white/20 hover:bg-white/40"}`}>
-            {task.done ? "✓" : ""}
+            className={`grid h-11 w-11 shrink-0 place-items-center rounded-full border-2 transition active:scale-90 ${task.done ? "border-emerald-500 bg-emerald-500 text-white" : "border-slate-300 text-transparent hover:border-emerald-500 hover:text-emerald-500 dark:border-slate-600"}`}>
+            <IconCheck className="h-5 w-5" />
           </button>
         </div>
 
         {/* time-blindness: how long until it starts */}
         {isToday && !task.done && mins != null && (
-          <div className="mt-3">
-            <div className="flex justify-between text-xs font-extrabold">
-              <span>{mins > 0 ? `Starts ${relative(mins)}` : mins > -1 ? "Starting now!" : `Started ${relative(mins)}`}</span>
-              {task.prepMin > 0 && mins > 0 && <span>Get ready {relative(mins - task.prepMin)}</span>}
+          <div>
+            <div className="flex justify-between text-xs font-semibold">
+              <span className={mins <= 0 ? c.text : "text-slate-600 dark:text-slate-300"}>{mins > 0 ? `Starts ${relative(mins)}` : mins > -1 ? "Starting now" : `Started ${relative(mins)}`}</span>
+              {task.prepMin > 0 && mins > 0 && <span className="text-slate-500">Get ready {relative(mins - task.prepMin)}</span>}
             </div>
-            <div className="mt-1 h-2.5 overflow-hidden rounded-full bg-white/30">
-              <div className="h-full rounded-full bg-white transition-all" style={{ width: `${mins <= 0 ? 100 : Math.max(4, 100 - Math.min(100, (mins / 120) * 100))}%` }} />
+            <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+              <div className={`h-full rounded-full ${c.bar} transition-all`} style={{ width: `${mins <= 0 ? 100 : Math.max(4, 100 - Math.min(100, (mins / 120) * 100))}%` }} />
             </div>
           </div>
         )}
-        {snoozed && <p className="mt-2 text-sm font-bold">😴 Snoozed until {new Date(task.snoozedUntil!).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</p>}
-      </div>
+        {snoozed && <p className="text-sm text-slate-500">Snoozed until {new Date(task.snoozedUntil!).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</p>}
 
-      <div className="space-y-3 bg-white p-4 dark:bg-slate-900">
         {task.steps.length > 0 && (
           <div>
-            <p className="mb-1 text-xs font-extrabold uppercase tracking-wide text-slate-400">Tiny steps {stepsDone}/{task.steps.length}</p>
-            <ul className="space-y-1.5">
+            <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-400">Steps {stepsDone}/{task.steps.length}</p>
+            <ul className="space-y-0.5">
               {task.steps.map((s) => (
                 <li key={s.id}>
-                  <label className="flex cursor-pointer items-center gap-3 rounded-xl px-2 py-1.5 hover:bg-slate-50 dark:hover:bg-slate-800">
-                    <input type="checkbox" checked={s.done} onChange={() => toggleStep(task.id, s.id)} className="h-6 w-6 accent-emerald-500" />
-                    <span className={`font-semibold ${s.done ? "text-slate-400 line-through" : "text-slate-800 dark:text-slate-100"}`}>{s.text}</span>
+                  <label className="flex cursor-pointer items-center gap-3 rounded-lg px-2 py-1.5 hover:bg-slate-50 dark:hover:bg-slate-800">
+                    <input type="checkbox" checked={s.done} onChange={() => toggleStep(task.id, s.id)} className="h-5 w-5 accent-emerald-600" />
+                    <span className={s.done ? "text-slate-400 line-through" : "text-slate-800 dark:text-slate-100"}>{s.text}</span>
                   </label>
                 </li>
               ))}
             </ul>
           </div>
         )}
+
         <div className="flex flex-wrap gap-2">
-          {!task.done && isToday && low && <Link href={`/now?task=${task.id}&minutes=2`} className={btn.primary}>⏱️ Just 2 minutes</Link>}
-          {!task.done && isToday && <Link href={`/now?task=${task.id}`} className={btn.soft}>🎯 Focus</Link>}
-          {!task.done && isToday && <button className={btn.soft} onClick={() => snooze(task.id, 10)}>😴 Snooze 10</button>}
-          <button className={btn.soft} onClick={() => setOpen((o) => !o)} aria-expanded={open}>{open ? "Less" : "More"}</button>
+          {!task.done && isToday && low && <Link href={`/now?task=${task.id}&minutes=2`} className={btn.primary}><IconPlay className="h-4 w-4" />Just 2 minutes</Link>}
+          {!task.done && isToday && <Link href={`/now?task=${task.id}`} className={btn.soft}><IconFocus className="h-4 w-4" />Focus</Link>}
+          {!task.done && isToday && <button className={btn.soft} onClick={() => snooze(task.id, 10)}><IconSnooze className="h-4 w-4" />Snooze 10</button>}
+          <button className={btn.ghost} onClick={() => setOpen((o) => !o)} aria-expanded={open}>{open ? "Less" : "More"}</button>
         </div>
         {open && (
-          <div className="space-y-3 rounded-2xl bg-slate-50 p-3 dark:bg-slate-800/50">
-            <form className="flex gap-2" onSubmit={(e) => { e.preventDefault(); if (newStep.trim()) { setSteps(task.id, [...task.steps, { id: crypto.randomUUID(), text: newStep, done: false }]); setNewStep(""); } }}>
-              <input value={newStep} onChange={(e) => setNewStep(e.target.value)} placeholder="Add a tiny step" maxLength={120} className={input} disabled={task.steps.length >= 12} />
+          <div className="space-y-3 rounded-xl bg-slate-50 p-3 dark:bg-slate-800/50">
+            <form className="flex gap-2" onSubmit={(e) => { e.preventDefault(); if (newStep.trim()) { setSteps(task.id, [...task.steps, { id: "", text: newStep, done: false }]); setNewStep(""); } }}>
+              <input value={newStep} onChange={(e) => setNewStep(e.target.value)} placeholder="Add a small step" maxLength={120} className={input} disabled={task.steps.length >= 12} />
               <button className={btn.soft} disabled={!newStep.trim()}>Add</button>
             </form>
             <div className="flex flex-wrap gap-2">
-              {!task.done && <button className={btn.soft} onClick={() => moveTask(task.id, addDays(task.date, 1))}>➡️ Move to {isToday ? "tomorrow" : "next day"}</button>}
+              {!task.done && <button className={btn.soft} onClick={() => moveTask(task.id, addDays(task.date, 1))}>Move to {isToday ? "tomorrow" : "next day"}</button>}
               {task.steps.length > 0 && <button className={btn.ghost} onClick={() => setSteps(task.id, [])}>Clear steps</button>}
-              <button className={`${btn.ghost} text-rose-600`} onClick={() => confirm(`Delete "${task.title}"?`) && deleteTask(task.id)}>Delete</button>
+              <button className={`${btn.ghost} text-rose-600 dark:text-rose-400`} onClick={() => confirm(`Delete "${task.title}"?`) && deleteTask(task.id)}>Delete</button>
             </div>
           </div>
         )}
@@ -139,6 +136,7 @@ export function TaskCard({ task, today, low = false }: { task: Task; today: stri
 // ------------------------------------------------------------------ add task
 
 const REMIND_OPTIONS = [5, 10, 15, 30, 60, 0];
+const label = "text-sm font-semibold text-slate-700 dark:text-slate-300";
 
 export function AddTask({ date, aiEnabled, onDone, defaultColor }: { date: string; aiEnabled: boolean; onDone: () => void; defaultColor: ColorKey }) {
   const { addTask } = useStore();
@@ -184,63 +182,64 @@ export function AddTask({ date, aiEnabled, onDone, defaultColor }: { date: strin
   }
 
   return (
-    <form onSubmit={submit} className={`${panel} space-y-4`}>
-      <h2 className="text-xl font-black text-slate-900 dark:text-white">New task ✨</h2>
-      <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="What do you want to get done?" maxLength={120} required autoFocus className={`${input} text-lg font-bold`} />
+    <form onSubmit={submit} className={`${panel} space-y-5`}>
+      <h2 className="text-lg font-bold text-slate-900 dark:text-white">New task</h2>
+      <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="What do you want to get done?" maxLength={120} required autoFocus className={`${input} text-lg font-semibold`} />
 
-      <div>
-        <p className="mb-1 text-sm font-extrabold text-slate-500">Pick an emoji</p>
-        <div className="flex flex-wrap gap-1.5">
-          {EMOJIS.map((x) => (
-            <button type="button" key={x} onClick={() => setEmoji(x)} aria-pressed={emoji === x} className={`grid h-11 w-11 place-items-center rounded-xl text-2xl transition ${emoji === x ? "scale-110 bg-fuchsia-100 ring-2 ring-fuchsia-400 dark:bg-fuchsia-950" : "bg-slate-100 dark:bg-slate-800"}`}>{x}</button>
-          ))}
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div>
+          <p className={`${label} mb-2`}>Icon</p>
+          <div className="flex flex-wrap gap-1.5">
+            {EMOJIS.map((x) => (
+              <button type="button" key={x} onClick={() => setEmoji(x)} aria-pressed={emoji === x} className={`grid h-9 w-9 place-items-center rounded-lg text-lg transition ${emoji === x ? "bg-indigo-50 ring-2 ring-indigo-500 dark:bg-indigo-500/15" : "bg-slate-100 hover:bg-slate-200 dark:bg-slate-800"}`}>{x}</button>
+            ))}
+          </div>
+        </div>
+        <div>
+          <p className={`${label} mb-2`}>Colour</p>
+          <div className="flex flex-wrap gap-2">
+            {COLORS.map((k) => (
+              <button type="button" key={k} onClick={() => setColor(k)} aria-label={COLOR[k].label} aria-pressed={color === k} className={`h-8 w-8 rounded-full ${COLOR[k].dot} transition ${color === k ? "ring-2 ring-offset-2 ring-slate-900 dark:ring-white dark:ring-offset-slate-900" : "opacity-80 hover:opacity-100"}`} />
+            ))}
+          </div>
         </div>
       </div>
 
-      <div>
-        <p className="mb-1 text-sm font-extrabold text-slate-500">Pick a colour</p>
-        <div className="flex flex-wrap gap-2">
-          {COLORS.map((k) => (
-            <button type="button" key={k} onClick={() => setColor(k)} aria-label={COLOR[k].label} aria-pressed={color === k} className={`h-10 w-10 rounded-full bg-gradient-to-br ${COLOR[k].card} transition ${color === k ? "scale-125 ring-4 ring-offset-2 ring-slate-900/20 dark:ring-white/40 dark:ring-offset-slate-900" : ""}`} />
-          ))}
-        </div>
-      </div>
-
-      <div className="grid gap-3 sm:grid-cols-2">
-        <label className="space-y-1">
-          <span className="text-sm font-extrabold text-slate-500">Start time (optional)</span>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <label className="space-y-1.5">
+          <span className={label}>Start time (optional)</span>
           <input type="time" value={time} onChange={(e) => setTime(e.target.value)} className={input} />
         </label>
-        <label className="space-y-1">
-          <span className="text-sm font-extrabold text-slate-500">How long will it take? (min)</span>
+        <label className="space-y-1.5">
+          <span className={label}>Your time estimate (min)</span>
           <input type="number" inputMode="numeric" min={1} max={600} value={estimate} onChange={(e) => setEstimate(e.target.value)} placeholder="e.g. 20" className={input} />
         </label>
         {time && (
-          <label className="space-y-1">
-            <span className="text-sm font-extrabold text-slate-500">&ldquo;Get ready&rdquo; alert</span>
+          <label className="space-y-1.5">
+            <span className={label}>Get-ready alert</span>
             <select value={prep} onChange={(e) => setPrep(e.target.value)} className={input}>
-              {[0, 5, 10, 15, 30, 60].map((m) => <option key={m} value={m}>{m ? `${m} min before` : "No get-ready alert"}</option>)}
+              {[0, 5, 10, 15, 30, 60].map((m) => <option key={m} value={m}>{m ? `${m} min before` : "None"}</option>)}
             </select>
           </label>
         )}
-        <label className="space-y-1">
-          <span className="text-sm font-extrabold text-slate-500">Keep reminding me</span>
+        <label className="space-y-1.5">
+          <span className={label}>Reminders</span>
           <select value={remind} onChange={(e) => setRemind(Number(e.target.value))} className={input}>
-            {REMIND_OPTIONS.map((m) => <option key={m} value={m}>{m ? `Every ${m} min until done` : "Only once"}</option>)}
+            {REMIND_OPTIONS.map((m) => <option key={m} value={m}>{m ? `Every ${m} min until done` : "Once only"}</option>)}
           </select>
         </label>
       </div>
 
-      <div className="space-y-2 rounded-2xl bg-slate-50 p-3 dark:bg-slate-800/50">
+      <div className="space-y-2 rounded-xl bg-slate-50 p-3 dark:bg-slate-800/50">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <p className="text-sm font-extrabold text-slate-500">Tiny steps (optional, makes starting easier)</p>
-          {aiEnabled && <button type="button" onClick={suggest} disabled={aiBusy || title.trim().length < 2} className={btn.soft}>{aiBusy ? "Thinking..." : "✨ Suggest steps"}</button>}
+          <p className={label}>Small steps <span className="font-normal text-slate-500">(optional, makes starting easier)</span></p>
+          {aiEnabled && <button type="button" onClick={suggest} disabled={aiBusy || title.trim().length < 2} className={btn.soft}>{aiBusy ? "Thinking..." : "Suggest steps"}</button>}
         </div>
-        {aiError && <p className="text-sm font-semibold text-rose-600">{aiError}</p>}
-        <ol className="space-y-1">
+        {aiError && <p className="text-sm text-rose-600">{aiError}</p>}
+        <ol className="space-y-1.5">
           {steps.map((s, i) => (
             <li key={i} className="flex items-center gap-2">
-              <span className="w-6 text-center font-black text-fuchsia-500">{i + 1}</span>
+              <span className="w-5 text-center text-sm font-semibold text-slate-400">{i + 1}</span>
               <input value={s} onChange={(e) => setSteps(steps.map((x, j) => (j === i ? e.target.value : x)))} maxLength={120} className={`${input} py-2`} />
               <button type="button" onClick={() => setSteps(steps.filter((_, j) => j !== i))} className={btn.ghost} aria-label="Remove step">✕</button>
             </li>
@@ -248,7 +247,7 @@ export function AddTask({ date, aiEnabled, onDone, defaultColor }: { date: strin
         </ol>
         {steps.length < 12 && (
           <div className="flex gap-2">
-            <input value={stepDraft} onChange={(e) => setStepDraft(e.target.value)} maxLength={120} placeholder="e.g. Put on shoes" className={`${input} py-2`}
+            <input value={stepDraft} onChange={(e) => setStepDraft(e.target.value)} maxLength={120} placeholder="e.g. Open the document" className={`${input} py-2`}
               onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); if (stepDraft.trim()) { setSteps([...steps, stepDraft]); setStepDraft(""); } } }} />
             <button type="button" className={btn.soft} disabled={!stepDraft.trim()} onClick={() => { setSteps([...steps, stepDraft]); setStepDraft(""); }}>Add</button>
           </div>

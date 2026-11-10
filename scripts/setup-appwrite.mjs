@@ -100,6 +100,12 @@ for (const [tableId, spec] of Object.entries(TABLES)) {
   console.log(`  table ${tableId}: ${spec.columns.length} columns, ${spec.indexes.length} indexes`);
 }
 
+// The every-minute trigger runs on cron-job.org by default (scripts/setup-cron.mjs), because
+// Appwrite's free plan only schedules functions hourly. On a paid plan, pass --with-function.
+if (!process.argv.includes("--with-function")) {
+  console.log("Tables ready. Reminder trigger: run scripts/setup-cron.mjs (or re-run with --with-function on a paid Appwrite plan).");
+  process.exit(0);
+}
 if (!SITE_URL || !CRON_SECRET) {
   console.log("SITE_URL / CRON_SECRET not set: skipping the reminder function.");
   process.exit(0);

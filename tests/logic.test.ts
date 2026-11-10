@@ -107,7 +107,7 @@ test("low-energy day: gentler reminders, easiest first, lighter day, double step
   assert.equal(dueReminders([t], log, at("10:10"), day).length, 1, "normal day: every 10 min");
   assert.equal(dueReminders([t], log, at("10:10"), day, true).length, 0, "low day: not yet");
   assert.equal(dueReminders([t], log, at("10:30"), day, true).length, 1, "low day: after 30 min");
-  assert.match(reminderText(t, "nag", true).body, /2 minutes|Small/);
+  assert.match(reminderText(t, "nag", true).body, /Two minutes|Small/);
 
   let s: State = emptyState();
   s = addTask(s, task(day, { title: "Big", estimateMin: 120 }));

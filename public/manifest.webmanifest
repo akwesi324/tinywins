@@ -1,10 +1,17 @@
 {
   "name": "TinyWins",
   "short_name": "TinyWins",
-  "description": "A colourful day planner for ADHD brains: 5 tasks a day, reminders until they're done, and a celebration for every win.",
+  "description": "A day planner built for ADHD: five tasks a day, reminders until they're done, and real progress you can see.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#fdf8ff",
-  "theme_color": "#d946ef",
-  "icons": [{ "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
+  "background_color": "#f7f7fb",
+  "theme_color": "#4f46e5",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
 }

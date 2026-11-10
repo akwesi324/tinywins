@@ -10,7 +10,8 @@
     "typecheck": "next typegen && tsc --noEmit",
     "test": "node --test tests/*.test.ts",
     "test:e2e": "node scripts/e2e.cjs",
-    "setup:appwrite": "node scripts/setup-appwrite.mjs"
+    "setup:appwrite": "node scripts/setup-appwrite.mjs",
+    "setup:cron": "node scripts/setup-cron.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.6.0",

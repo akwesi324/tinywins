@@ -8,6 +8,7 @@ import { dueReminders, isLowDay, recordReminder, reminderText } from "@/lib/logi
 import type { ReminderLog } from "@/lib/types.ts";
 import { COLOR, btn } from "@/lib/colors";
 import { chime } from "@/components/effects";
+import { IconBell } from "@/components/icons";
 
 type Banner = { taskId: string | null; title: string; body: string };
 
@@ -99,14 +100,15 @@ export default function ReminderEngine() {
   const color = COLOR[task?.color ?? "violet"];
   return (
     <div role="alert" className="fixed inset-x-0 top-0 z-40 p-3 sm:p-4">
-      <div className={`mx-auto max-w-xl animate-[wiggle_.6s_ease-in-out_2] rounded-3xl bg-gradient-to-r ${color.card} p-1 shadow-2xl`}>
-        <div className="rounded-[1.35rem] bg-white p-4 dark:bg-slate-900">
-          <p className="text-lg font-black text-slate-900 dark:text-white">⏰ {banner.title}</p>
-          <p className="mt-1 text-slate-600 dark:text-slate-300">{banner.body}</p>
+      <div className="mx-auto flex max-w-xl animate-[nudge_.5s_ease-in-out_2] overflow-hidden rounded-2xl bg-white shadow-xl ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-700">
+        <span className={`w-1.5 shrink-0 ${color.bar}`} aria-hidden />
+        <div className="flex-1 p-4">
+          <p className="flex items-center gap-2 font-bold text-slate-900 dark:text-white"><IconBell className={`h-4 w-4 ${color.text}`} /> {banner.title}</p>
+          <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">{banner.body}</p>
           <div className="mt-3 flex flex-wrap gap-2">
             {task && !task.done && (
               <>
-                <button className={btn.primary} onClick={() => { setBanner(null); toggleDone(task.id); }}>Done ✅</button>
+                <button className={btn.primary} onClick={() => { setBanner(null); toggleDone(task.id); }}>Done</button>
                 <button className={btn.soft} onClick={() => { setBanner(null); snooze(task.id, 10); }}>Snooze 10 min</button>
                 <Link className={btn.soft} href={`/now?task=${task.id}`} onClick={() => setBanner(null)}>Focus on it</Link>
               </>

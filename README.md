@@ -31,15 +31,16 @@ A colourful day planner for ADHD brains. Plan up to **5 tasks a day**, get **rem
   - All data access runs on the server with an API key the browser never sees, and every query is scoped to the signed-in user.
   - The daily cap is a unique index on (user, day, slot 1–5), so the database itself refuses a 6th task.
   - Each reminder is recorded under a fixed id, so it can only be sent once.
-- Web Push (VAPID), triggered every minute by an Appwrite scheduled function.
+- Web Push (VAPID), triggered every minute by a free [cron-job.org](https://cron-job.org) job (Appwrite's free plan only schedules functions hourly; on a paid plan the included Appwrite function can do it instead).
 - Optional Claude API for step suggestions.
 
 ## Setup
 
 1. In [Appwrite Cloud](https://cloud.appwrite.io), create a project. Copy its endpoint and project ID, and create an API key with all scopes. Under **Add platform → Web**, add your site's hostname so password-reset links can point to it.
 2. Generate push keys with `npx web-push generate-vapid-keys`, and pick a random `CRON_SECRET`.
-3. Copy `.env.example` to `.env.local` and fill it in. Then run `npm install` and `npm run setup:appwrite`. This creates the database, the tables with their indexes, and the every-minute reminder function. It's safe to run again.
-4. Run `npm run dev`, or deploy to Vercel with the same environment variables. Run `npm run setup:appwrite` again once `SITE_URL` is the live address.
+3. Copy `.env.example` to `.env.local` and fill it in. Then run `npm install` and `npm run setup:appwrite`, which creates the database and the tables with their indexes. It's safe to run again.
+4. Run `npm run dev`, or deploy to Vercel with the same environment variables.
+5. Create a free [cron-job.org](https://cron-job.org) API key (Settings → API). Then run `CRONJOB_API_KEY=... npm run setup:cron` with `SITE_URL` set to the live address. This calls the reminder endpoint every minute.
 
 ## Tests
 

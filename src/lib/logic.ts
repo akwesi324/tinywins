@@ -103,7 +103,7 @@ export function reminderText(t: Task, kind: ReminderKind, low = false): { title:
   if (kind === "prep") return { title: `Get ready: ${name}`, body: `It starts in ${t.prepMin} min. Finish what you're doing and get set up.` };
   if (low) {
     if (kind === "start") return { title: `Gentle nudge: ${name}`, body: next ? `Low-energy day, so just this: ${next}` : "Low-energy day. Try just 2 minutes. That counts!" };
-    return { title: `Whenever you're ready: ${name}`, body: next ? `Tiny step: ${next}. Small is still a win. 💜` : "No pressure. 2 minutes is enough to start. 💜" };
+    return { title: `Whenever you're ready: ${name}`, body: next ? `Tiny step: ${next}. Small is still a win.` : "No pressure. Two minutes is enough to start." };
   }
   if (kind === "start") return { title: `Time for: ${name}`, body: next ? `First tiny step: ${next}` : "You've got this. Just start for 2 minutes." };
   return { title: `Still waiting: ${name}`, body: next ? `Next tiny step: ${next}` : "Tap Done when it's finished, or snooze it for a bit." };

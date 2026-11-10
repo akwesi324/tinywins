@@ -15,8 +15,8 @@ export function Confetti({ burst, big = false }: { burst: number; big?: boolean 
     canvas.width = innerWidth * dpr;
     canvas.height = innerHeight * dpr;
     ctx.scale(dpr, dpr);
-    const colors = ["#f43f5e", "#f97316", "#facc15", "#84cc16", "#10b981", "#0ea5e9", "#8b5cf6", "#d946ef"];
-    const pieces = Array.from({ length: big ? 260 : 120 }, () => ({
+    const colors = ["#6366f1", "#10b981", "#f59e0b", "#0ea5e9", "#f43f5e"];
+    const pieces = Array.from({ length: big ? 140 : 60 }, () => ({
       x: innerWidth / 2 + (Math.random() - 0.5) * 120,
       y: innerHeight * 0.45,
       vx: (Math.random() - 0.5) * (big ? 22 : 15),

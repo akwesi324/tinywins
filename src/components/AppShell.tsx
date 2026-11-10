@@ -5,12 +5,14 @@ import { usePathname } from "next/navigation";
 import { StoreProvider, useStore } from "@/lib/store";
 import Celebration from "@/components/Celebration";
 import ReminderEngine from "@/components/ReminderEngine";
+import { IconFocus, IconProgress, IconSettings, IconToday } from "@/components/icons";
+import { btn } from "@/lib/colors";
 
 const NAV = [
-  { href: "/", label: "Today", icon: "🗓️" },
-  { href: "/now", label: "Focus", icon: "🎯" },
-  { href: "/wins", label: "Wins", icon: "🏆" },
-  { href: "/settings", label: "Settings", icon: "⚙️" },
+  { href: "/", label: "Today", Icon: IconToday },
+  { href: "/now", label: "Focus", Icon: IconFocus },
+  { href: "/wins", label: "Progress", Icon: IconProgress },
+  { href: "/settings", label: "Settings", Icon: IconSettings },
 ];
 
 function ErrorToast() {
@@ -18,8 +20,8 @@ function ErrorToast() {
   if (!error) return null;
   return (
     <div role="alert" className="fixed inset-x-0 bottom-24 z-50 flex justify-center px-4">
-      <button onClick={clearError} className="max-w-md rounded-2xl bg-slate-900 px-5 py-3 text-left font-semibold text-white shadow-xl dark:bg-white dark:text-slate-900">
-        {error} <span className="ml-2 opacity-60">Tap to close</span>
+      <button onClick={clearError} className="max-w-md rounded-xl bg-slate-900 px-5 py-3 text-left text-sm font-medium text-white shadow-lg dark:bg-white dark:text-slate-900">
+        {error} <span className="ml-2 opacity-60">Dismiss</span>
       </button>
     </div>
   );
@@ -31,11 +33,8 @@ function Loading({ children }: { children: React.ReactNode }) {
     return (
       <div className="grid min-h-[60vh] place-items-center text-center">
         <div>
-          <div className="text-5xl" aria-hidden>🌧️</div>
-          <p className="mt-2 font-bold text-slate-600 dark:text-slate-300">Couldn&apos;t load your day just now.</p>
-          <button className="mt-4 rounded-2xl bg-gradient-to-r from-violet-500 to-fuchsia-500 px-5 py-3 font-extrabold text-white" onClick={() => { clearError(); reload(); }}>
-            Try again
-          </button>
+          <p className="font-semibold text-slate-700 dark:text-slate-200">Couldn&apos;t load your day just now.</p>
+          <button className={`${btn.primary} mt-4`} onClick={() => { clearError(); reload(); }}>Try again</button>
         </div>
       </div>
     );
@@ -44,8 +43,8 @@ function Loading({ children }: { children: React.ReactNode }) {
     return (
       <div className="grid min-h-[60vh] place-items-center">
         <div className="text-center">
-          <div className="animate-bounce text-5xl" aria-hidden>🌟</div>
-          <p className="mt-2 font-bold text-slate-500">Getting your day ready...</p>
+          <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-slate-300 border-t-indigo-600" aria-hidden />
+          <p className="mt-3 text-sm font-medium text-slate-500">Getting your day ready...</p>
         </div>
       </div>
     );
@@ -60,16 +59,16 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       <div className="mx-auto min-h-screen max-w-2xl px-4 pb-28 pt-6">
         <Loading>{children}</Loading>
       </div>
-      <nav aria-label="Main" className="fixed inset-x-0 bottom-0 z-30 border-t border-white/50 bg-white/85 backdrop-blur-lg dark:border-slate-800 dark:bg-slate-950/85">
+      <nav aria-label="Main" className="fixed inset-x-0 bottom-0 z-30 border-t border-slate-200 bg-white/90 backdrop-blur-lg dark:border-slate-800 dark:bg-slate-950/90">
         <ul className="mx-auto grid max-w-2xl grid-cols-4">
-          {NAV.map((n) => {
-            const active = n.href === "/" ? path === "/" : path.startsWith(n.href);
+          {NAV.map(({ href, label, Icon }) => {
+            const active = href === "/" ? path === "/" : path.startsWith(href);
             return (
-              <li key={n.href}>
-                <Link href={n.href} aria-current={active ? "page" : undefined}
-                  className={`flex flex-col items-center gap-0.5 py-3 text-xs font-extrabold transition ${active ? "text-fuchsia-600 dark:text-fuchsia-400" : "text-slate-500"}`}>
-                  <span className={`text-2xl transition ${active ? "scale-125" : ""}`} aria-hidden>{n.icon}</span>
-                  {n.label}
+              <li key={href}>
+                <Link href={href} aria-current={active ? "page" : undefined}
+                  className={`flex flex-col items-center gap-1 py-3 text-xs font-semibold transition ${active ? "text-indigo-600 dark:text-indigo-400" : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"}`}>
+                  <Icon className="h-6 w-6" />
+                  {label}
                 </Link>
               </li>
             );
