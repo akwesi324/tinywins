@@ -4,7 +4,7 @@ A colourful day planner for ADHD brains. Plan up to **5 tasks a day**, get **rem
 
 ## Features
 
-- **5 tasks a day, max.** The limit is enforced by the database, so it can't be bypassed. Unfinished tasks can be moved to another day with one tap.
+- **5 tasks a day, max.** The limit is enforced by the database (a unique slot index), so it can't be bypassed. Unfinished tasks can be moved to another day with one tap.
 - **Reminders that keep going:**
   - an optional "get ready" alert before a task starts;
   - an alert when it starts;
@@ -27,31 +27,27 @@ A colourful day planner for ADHD brains. Plan up to **5 tasks a day**, get **rem
 ## Tech
 
 - Next.js 16 (App Router, TypeScript) with Tailwind CSS.
-- Supabase: Postgres, Auth, and row level security on every table.
-- Web Push (VAPID), triggered every minute by Supabase `pg_cron`.
+- [Appwrite](https://appwrite.io) (open source): accounts, database and a scheduled function.
+  - All data access runs on the server with an API key the browser never sees, and every query is scoped to the signed-in user.
+  - The daily cap is a unique index on (user, day, slot 1–5), so the database itself refuses a 6th task.
+  - Each reminder is recorded under a fixed id, so it can only be sent once.
+- Web Push (VAPID), triggered every minute by an Appwrite scheduled function.
 - Optional Claude API for step suggestions.
 
 ## Setup
 
-1. Create a Supabase project. Run `supabase/migrations/20261110120000_tinywins.sql` in the SQL Editor.
-2. In **Authentication → URL Configuration**, set the Site URL and add `https://<site>/auth/callback` to the redirect URLs.
-3. Generate push keys with `npx web-push generate-vapid-keys`, and pick a random `CRON_SECRET`.
-4. Run locally:
-   ```bash
-   npm install
-   cp .env.example .env.local   # fill in the values
-   npm run dev
-   ```
-5. Deploy on Vercel with the same environment variables. Then run `supabase/schedule-reminders.sql`, with your site URL and `CRON_SECRET` filled in, to start the every-minute reminder job.
+1. In [Appwrite Cloud](https://cloud.appwrite.io), create a project. Copy its endpoint and project ID, and create an API key with all scopes. Under **Add platform → Web**, add your site's hostname so password-reset links can point to it.
+2. Generate push keys with `npx web-push generate-vapid-keys`, and pick a random `CRON_SECRET`.
+3. Copy `.env.example` to `.env.local` and fill it in. Then run `npm install` and `npm run setup:appwrite`. This creates the database, the tables with their indexes, and the every-minute reminder function. It's safe to run again.
+4. Run `npm run dev`, or deploy to Vercel with the same environment variables. Run `npm run setup:appwrite` again once `SITE_URL` is the live address.
 
 ## Tests
 
 | Command | What it checks |
 |---|---|
 | `npm test` | The core rules: the daily cap, reminder timing (including time zones and low-energy days), points, streaks, badges and messages |
-| `powershell -File supabase/tests/run.ps1` | The database on a local PostgreSQL: cap enforcement, one-time reminders, low-energy timing, and privacy between users and anonymous visitors |
 | `npm run typecheck && npm run lint && npm run build` | Types, lint and the production build |
-| `npm run test:e2e` | A browser run against a live deployment (needs a test Supabase project) |
+| `npm run test:e2e` | A browser run against a live deployment: sign-up, energy check-in and low-energy mode, the 5-task cap (also checked in the database), celebrations, the lighter day, focus mode, rewards and privacy between users. It deletes its test users afterwards |
 
 ---
 

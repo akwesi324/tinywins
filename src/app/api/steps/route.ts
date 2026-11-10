@@ -2,7 +2,8 @@ import Anthropic from "@anthropic-ai/sdk";
 import { betaZodOutputFormat } from "@anthropic-ai/sdk/helpers/beta/zod";
 import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
-import { createClient } from "@/lib/supabase/server";
+import { currentUser } from "@/lib/appwrite";
+import { countAiRequestsLastHour, logAiRequest } from "@/lib/data";
 
 // Suggests tiny, concrete steps for a task. Optional: only works when ANTHROPIC_API_KEY is set.
 export const maxDuration = 60;
@@ -20,15 +21,13 @@ let client: Anthropic | null = null;
 
 export async function POST(request: NextRequest) {
   if (!process.env.ANTHROPIC_API_KEY) return NextResponse.json({ error: "Step suggestions are not set up on this server." }, { status: 503 });
-  const supabase = await createClient();
-  const { data } = await supabase.auth.getUser();
-  if (!data.user) return NextResponse.json({ error: "Sign in first." }, { status: 401 });
+  const user = await currentUser();
+  if (!user) return NextResponse.json({ error: "Sign in first." }, { status: 401 });
   const parsed = Body.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "Give the task a name first." }, { status: 400 });
 
-  const { count } = await supabase.from("ai_requests").select("id", { count: "exact", head: true }).gte("at", new Date(Date.now() - 3600_000).toISOString());
-  if ((count ?? 0) >= HOURLY_LIMIT) return NextResponse.json({ error: "That's a lot of suggestions this hour! Try writing a step yourself." }, { status: 429 });
-  await supabase.from("ai_requests").insert({});
+  if ((await countAiRequestsLastHour(user.id)) >= HOURLY_LIMIT) return NextResponse.json({ error: "That's a lot of suggestions this hour! Try writing a step yourself." }, { status: 429 });
+  await logAiRequest(user.id);
 
   client ??= new Anthropic();
   try {

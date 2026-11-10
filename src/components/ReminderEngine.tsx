@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { useEffect, useRef, useState } from "react";
+import { takeReminder } from "@/app/actions/data";
 import { useStore } from "@/lib/store";
 import { dueReminders, isLowDay, recordReminder, reminderText } from "@/lib/logic.ts";
 import type { ReminderLog } from "@/lib/types.ts";
@@ -13,12 +13,11 @@ type Banner = { taskId: string | null; title: string; body: string };
 
 /**
  * While TinyWins is open: checks every 30 s for due reminders, shows a banner + chime, and a
- * system notification when the tab is in the background. take_reminder (database) guarantees
+ * system notification when the tab is in the background. the database guarantees
  * each reminder fires once even when the server push job runs at the same time.
  */
 export default function ReminderEngine() {
   const { state, today, ready, reload, toggleDone, snooze } = useStore();
-  const supabase = useMemo(() => createClient(), []);
   const [banner, setBanner] = useState<Banner | null>(null);
   const log = useRef<ReminderLog>({});
   const latest = useRef(state);
@@ -59,8 +58,8 @@ export default function ReminderEngine() {
       const low = isLowDay(s, today);
       for (const due of dueReminders(s.tasks, log.current, now, today, low)) {
         log.current = recordReminder(log.current, due, now); // don't ask again this tick
-        const { data: taken } = await supabase.rpc("take_reminder", { p_task: due.taskId, p_kind: due.kind, p_now: new Date(now).toISOString() });
-        if (!taken) continue;
+        const res = await takeReminder(due.taskId, due.kind);
+        if (!res.ok || !res.value) continue;
         const task = s.tasks.find((t) => t.id === due.taskId);
         if (!task) continue;
         const text = reminderText(task, due.kind, low);
@@ -78,7 +77,7 @@ export default function ReminderEngine() {
     check();
     const id = setInterval(check, 30000);
     return () => clearInterval(id);
-  }, [ready, today, supabase]);
+  }, [ready, today]);
 
   // flash the tab title while a reminder is waiting
   useEffect(() => {

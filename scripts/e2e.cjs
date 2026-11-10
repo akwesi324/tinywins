@@ -1,13 +1,13 @@
-// End-to-end test in headless Edge/Chrome against a running TinyWins connected to a TEST Supabase
-// project with the migration applied. Creates two confirmed users with the service role key and
-// deletes them afterwards.
-//   E2E_BASE_URL, NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY   ->   npm run test:e2e
+// End-to-end test in headless Edge/Chrome against a running TinyWins and its Appwrite project.
+// Signs two users up through the real registration page, runs the main flows, then deletes both
+// users and all their rows.
+//   E2E_BASE_URL + APPWRITE_ENDPOINT, APPWRITE_PROJECT_ID, APPWRITE_API_KEY   ->   npm run test:e2e
 /* eslint-disable @typescript-eslint/no-require-imports -- plain Node script */
 const { spawn } = require("child_process");
 const fs = require("fs");
 const os = require("os");
 const path = require("path");
-const { createClient } = require("@supabase/supabase-js");
+const { Client, Query, TablesDB, Users } = require("node-appwrite");
 
 for (const file of [".env.local", ".env"]) {
   const p = path.join(__dirname, "..", file);
@@ -19,11 +19,14 @@ for (const file of [".env.local", ".env"]) {
 }
 const BASE = (process.env.E2E_BASE_URL || "http://localhost:3000").replace(/\/$/, "");
 const EDGE = process.env.EDGE_PATH || "C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe";
-if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
-  console.error("Set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY (a test project).");
+if (!process.env.APPWRITE_ENDPOINT || !process.env.APPWRITE_PROJECT_ID || !process.env.APPWRITE_API_KEY) {
+  console.error("Set APPWRITE_ENDPOINT, APPWRITE_PROJECT_ID and APPWRITE_API_KEY.");
   process.exit(1);
 }
-const admin = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } });
+const aw = new Client().setEndpoint(process.env.APPWRITE_ENDPOINT).setProject(process.env.APPWRITE_PROJECT_ID).setKey(process.env.APPWRITE_API_KEY);
+const users = new Users(aw);
+const tables = new TablesDB(aw);
+const TABLES = ["tasks", "reminders", "rewards", "claims", "focus_sessions", "badges", "energy", "push_subscriptions", "ai_requests"];
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const results = [];
 const check = (name, ok, detail = "") => results.push([ok ? "PASS" : "FAIL", name, detail]);
@@ -36,12 +39,7 @@ const check = (name, ok, detail = "") => results.push([ok ? "PASS" : "FAIL", nam
   const port = 9300 + Math.floor(Math.random() * 300);
   const edge = spawn(EDGE, ["--headless=new", "--disable-gpu", `--remote-debugging-port=${port}`, `--user-data-dir=${prof}`, "--window-size=430,1000", "about:blank"], { stdio: "ignore" });
   try {
-    for (const key of ["main", "other"]) {
-      const email = `e2e-${key}-${tag}@example.test`;
-      const { data, error } = await admin.auth.admin.createUser({ email, password, email_confirm: true, user_metadata: { display_name: `E2E ${key}`, timezone: "Africa/Accra" } });
-      if (error) throw error;
-      people[key] = { id: data.user.id, email };
-    }
+    for (const key of ["main", "other"]) people[key] = { email: `e2e-${key}-${tag}@example.test`, id: null };
 
     let ws;
     for (let i = 0; i < 50 && !ws; i++) {
@@ -83,6 +81,17 @@ const check = (name, ok, detail = "") => results.push([ok ? "PASS" : "FAIL", nam
       Object.getOwnPropertyDescriptor(proto, 'value').set.call(el, ${JSON.stringify(v)}); el.dispatchEvent(new Event('input', { bubbles: true })); el.dispatchEvent(new Event('change', { bubbles: true })); return true; })()`);
     const click = (label, scope = "button, a, label") => ev(`(() => { const b = [...document.querySelectorAll(${JSON.stringify(scope)})].find(x => x.textContent.trim().includes(${JSON.stringify(label)}) && !x.disabled);
       if (!b) throw new Error('no element: ' + ${JSON.stringify(label)}); b.click(); return true; })()`);
+    const register = async (who) => {
+      await cdp("Network.clearBrowserCookies");
+      await go("/register");
+      await setVal("input[name=display_name]", `E2E ${who}`);
+      await setVal("input[name=email]", people[who].email);
+      await setVal("input[name=password]", password);
+      await click("Let's go", "button");
+      await waitFor("location.pathname === '/' && !document.body.innerText.includes('Getting your day ready')", `${who} registered`);
+      const found = await users.list({ queries: [Query.equal("email", people[who].email)] });
+      people[who].id = found.users[0]?.$id ?? null;
+    };
     const signIn = async (who) => {
       await cdp("Network.clearBrowserCookies");
       await go("/login");
@@ -108,7 +117,10 @@ const check = (name, ok, detail = "") => results.push([ok ? "PASS" : "FAIL", nam
     await go("/");
     check("signed-out visitors see the welcome page", (await ev("location.pathname")) === "/welcome" && (await text()).includes("Plan small. Win big."));
 
-    await signIn("main");
+    await register("other");
+    await register("main");
+    check("sign-up works and lands on today", Boolean(people.main.id));
+    check("starter rewards created", (await tables.listRows({ databaseId: "tinywins", tableId: "rewards", queries: [Query.equal("userId", people.main.id)] })).rows.length === 3);
     check("energy check-in is asked", (await text()).includes("How's your energy today?"));
     await click("Low", "button");
     await waitText("Low-energy day mode", "low-energy mode on");
@@ -124,8 +136,14 @@ const check = (name, ok, detail = "") => results.push([ok ? "PASS" : "FAIL", nam
     check("easiest task listed first on a low day", order[0].startsWith("Drink water"), order.join(" | "));
     check("'Just 2 minutes' start offered", (await text()).includes("Just 2 minutes"));
 
-    const { error: capErr } = await admin.from("tasks").insert({ user_id: people.main.id, date: (await admin.from("tasks").select("date").eq("user_id", people.main.id).limit(1)).data[0].date, title: "Sixth", day_start_at: new Date().toISOString() });
-    check("database refuses a 6th task even with full access", Boolean(capErr), capErr && capErr.message);
+    const existing = (await tables.listRows({ databaseId: "tinywins", tableId: "tasks", queries: [Query.equal("userId", people.main.id), Query.limit(1)] })).rows[0];
+    let capRefused = false;
+    try {
+      await tables.createRow({ databaseId: "tinywins", tableId: "tasks", rowId: "sixthtask" + tag.slice(0, 11).padEnd(11, "x"), data: { userId: people.main.id, date: existing.date, slot: 3, title: "Sixth", emoji: "⭐", color: "sky", dayStartAt: new Date().toISOString(), prepMin: 0, remindEvery: 15, done: false, focusSeconds: 0 } });
+    } catch (err) {
+      capRefused = err.code === 409;
+    }
+    check("database refuses a 6th task (slot index), even with full access", capRefused);
 
     await ev(`document.querySelector('article button[aria-label^="Mark Drink water"]').click()`);
     await waitFor("!!document.querySelector('[role=alertdialog]')", "celebration");
@@ -153,6 +171,7 @@ const check = (name, ok, detail = "") => results.push([ok ? "PASS" : "FAIL", nam
     check("settings load", (await text()).includes("Reminders") && (await text()).includes("Time zone"));
 
     await signIn("other");
+    await waitText("How's your energy today?", "other user's check-in");
     await click("Okay", "button");
     await sleep(800);
     const otherText = await text();
@@ -163,7 +182,11 @@ const check = (name, ok, detail = "") => results.push([ok ? "PASS" : "FAIL", nam
     check("run completed", false, e.message);
   } finally {
     edge.kill();
-    for (const p of Object.values(people)) await admin.auth.admin.deleteUser(p.id);
+    for (const p of Object.values(people)) {
+      if (!p.id) continue;
+      for (const tableId of TABLES) await tables.deleteRows({ databaseId: "tinywins", tableId, queries: [Query.equal("userId", p.id)] }).catch(() => {});
+      await users.delete({ userId: p.id }).catch(() => {});
+    }
     await sleep(1500);
     try {
       fs.rmSync(prof, { recursive: true, force: true });

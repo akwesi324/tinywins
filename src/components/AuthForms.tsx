@@ -61,10 +61,20 @@ export function ForgotForm() {
   );
 }
 
-export function ResetForm() {
+export function ResetForm({ userId, secret }: { userId: string; secret: string }) {
   const [state, action] = useActionState(updatePassword, undefined);
+  if (state?.ok) {
+    return (
+      <div className="space-y-4">
+        <Message state={state} />
+        <Link href="/login" className={`${btn.primary} w-full`}>Sign in</Link>
+      </div>
+    );
+  }
   return (
     <form action={action} className="space-y-4">
+      <input type="hidden" name="userId" value={userId} />
+      <input type="hidden" name="secret" value={secret} />
       <label className={label}><span className={span}>New password</span><input type="password" name="password" required minLength={8} maxLength={72} autoComplete="new-password" className={input} /></label>
       <Message state={state} />
       <Submit pending="Saving...">Save password</Submit>
