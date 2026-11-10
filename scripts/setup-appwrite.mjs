@@ -6,7 +6,8 @@ import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { AppwriteException, Client, Functions, ID, InputFile, TablesDB, TablesDBIndexType as IndexType } from "node-appwrite";
+import { AppwriteException, Client, Functions, ID, TablesDB, TablesDBIndexType as IndexType } from "node-appwrite";
+import { InputFile } from "node-appwrite/file";
 
 for (const file of [".env.local", ".env"]) {
   const p = path.join(import.meta.dirname, "..", file);
