@@ -133,18 +133,15 @@ const check = (name, ok, detail = "") => results.push([ok ? "PASS" : "FAIL", nam
     await waitFor("location.pathname === '/welcome' && document.body.innerText.includes('Plan less. Finish more.')", "welcome page").catch(() => {});
     check("signed-out visitors see the welcome page", (await ev("location.pathname")) === "/welcome" && (await text()).includes("Plan less. Finish more."));
     // the feature tour: one card at a time, Next until the last, then Get started -> sign-up
-    const counter = () => ev("(document.querySelector('[aria-live=polite]')?.textContent || '').trim().split(' ')[0]");
-    for (let n = 0; n < 30 && (await counter()) !== "6"; n++) {
-      const before = await counter();
-      await click("Next", "button");
-      for (let w = 0; w < 10 && (await counter()) === before; w++) await sleep(200); // also waits out hydration
+    const shownCard = () => ev("(() => { const t = document.querySelector('ol'); return Math.round(t.scrollLeft / t.clientWidth) + 1; })()");
+    for (let n = 1; n <= 5; n++) {
+      await ev(`[...document.querySelectorAll('#tour-${n} a')].find(a => a.textContent.includes('Next'))?.click()`);
+      await sleep(900);
     }
-    const shot = await cdp("Page.captureScreenshot", { format: "png" });
-    fs.writeFileSync(path.join(os.tmpdir(), "tinywins-tour-last.png"), Buffer.from(shot.data, "base64"));
-    check("tour advances one card at a time to the last", (await counter()) === "6", `at ${await counter()} / 6`);
-    check("last card offers Get started", await ev("[...document.querySelectorAll('button')].some(b => b.textContent.trim().startsWith('Get started'))"));
+    check("tour advances one card at a time to the last", (await shownCard()) === 6, `at card ${await shownCard()}`);
+    check("last card offers Get started", await ev("!!document.querySelector('#tour-6 a[href=\'/register\']')"));
     for (let n = 0; n < 5 && (await ev("location.pathname")) !== "/register"; n++) {
-      await click("Get started", "button").catch(() => {});
+      await ev("document.querySelector('#tour-6 a[href=\'/register\']')?.click()");
       await waitFor("location.pathname === '/register'", "Get started opens sign-up", 60).catch(() => {});
     }
     await waitFor("location.pathname === '/register'", "Get started opens sign-up");
