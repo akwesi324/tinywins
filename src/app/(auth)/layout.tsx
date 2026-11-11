@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Logo } from "@/components/icons";
+import Copyright from "@/components/Copyright";
 
 export default function AuthLayout({ children }: LayoutProps<"/">) {
   return (
@@ -9,6 +10,7 @@ export default function AuthLayout({ children }: LayoutProps<"/">) {
         TinyWins
       </Link>
       <main className="flex-1">{children}</main>
+      <Copyright className="mt-10" />
     </div>
   );
 }

@@ -34,12 +34,12 @@ export function DayTimeline({ tasks, isToday }: { tasks: Task[]; isToday: boolea
   const pos = now ? dayPosition(now) : 0;
   return (
     <div className="pt-3">
-      <div className="relative h-2 rounded-full bg-slate-100 dark:bg-slate-800">
+      <div className="relative h-2 rounded-full bg-gradient-to-r from-indigo-100 via-sky-100 to-cyan-100 dark:from-indigo-500/15 dark:via-sky-500/15 dark:to-cyan-500/15">
         {isToday && now > 0 && <div className="absolute inset-y-0 left-0 rounded-full bg-slate-300 dark:bg-slate-600" style={{ width: `${pos * 100}%` }} />}
         {timed.map((t) => (
           <span key={t.id} title={`${t.time} ${t.title}`} className={`absolute top-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full ring-2 ring-white dark:ring-slate-900 ${COLOR[t.color].dot} ${t.done ? "opacity-40" : ""}`} style={{ left: `${dayPosition(t.startsAt!) * 100}%` }} />
         ))}
-        {isToday && now > 0 && <span className="absolute -top-1.5 h-5 w-0.5 -translate-x-1/2 rounded-full bg-indigo-600 dark:bg-indigo-400" style={{ left: `${pos * 100}%` }} aria-label="Now" />}
+        {isToday && now > 0 && <span className="absolute -top-1.5 h-5 w-0.5 -translate-x-1/2 rounded-full bg-gradient-to-b from-indigo-500 to-cyan-400" style={{ left: `${pos * 100}%` }} aria-label="Now" />}
       </div>
       <div className="mt-1.5 flex justify-between text-[11px] font-medium text-slate-400"><span>7:00</span><span>11:00</span><span>15:00</span><span>19:00</span><span>23:00</span></div>
     </div>
@@ -191,7 +191,7 @@ export function AddTask({ date, aiEnabled, onDone, defaultColor }: { date: strin
           <p className={`${label} mb-2`}>Icon</p>
           <div className="flex flex-wrap gap-1.5">
             {EMOJIS.map((x) => (
-              <button type="button" key={x} onClick={() => setEmoji(x)} aria-pressed={emoji === x} className={`grid h-9 w-9 place-items-center rounded-lg text-lg transition ${emoji === x ? "bg-indigo-50 ring-2 ring-indigo-500 dark:bg-indigo-500/15" : "bg-slate-100 hover:bg-slate-200 dark:bg-slate-800"}`}>{x}</button>
+              <button type="button" key={x} onClick={() => setEmoji(x)} aria-pressed={emoji === x} className={`grid h-9 w-9 place-items-center rounded-lg text-lg transition ${emoji === x ? "bg-sky-50 ring-2 ring-blue-500 dark:bg-sky-500/15" : "bg-slate-100 hover:bg-slate-200 dark:bg-slate-800"}`}>{x}</button>
             ))}
           </div>
         </div>

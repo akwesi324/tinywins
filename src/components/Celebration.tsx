@@ -37,10 +37,11 @@ export default function Celebration() {
       <Confetti burst={celebration.id} big={big} />
       <div role="alertdialog" aria-live="assertive" aria-label="Task completed" className="fixed inset-0 z-50 grid place-items-center bg-slate-950/40 p-6 backdrop-blur-sm" onClick={dismissCelebration}>
         <div className="w-full max-w-sm animate-[pop_.3s_ease-out] rounded-2xl bg-white p-7 text-center shadow-2xl dark:bg-slate-900" onClick={(e) => e.stopPropagation()}>
-          <span className={`mx-auto grid h-14 w-14 place-items-center rounded-full ${big ? "bg-indigo-600" : "bg-emerald-500"} text-white`}>
+          <span className={`mx-auto grid h-14 w-14 place-items-center rounded-full ${big ? "bg-gradient-to-br from-indigo-500 via-blue-500 to-cyan-400" : "bg-gradient-to-br from-teal-400 to-emerald-500"} text-white`}>
             <IconCheck className="h-7 w-7" />
           </span>
           <p className="mt-4 text-xl font-bold leading-snug tracking-tight text-slate-900 dark:text-white">{celebration.text}</p>
+          <span className="mx-auto mt-3 block h-1 w-16 rounded-full bg-gradient-to-r from-indigo-500 via-sky-500 to-cyan-400" aria-hidden />
           {celebration.badges.length > 0 && (
             <div className="mt-4 space-y-2">
               {celebration.badges.map((b) => (

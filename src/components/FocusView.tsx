@@ -16,6 +16,10 @@ function Ring({ fraction, color, label, sub }: { fraction: number; color: string
   return (
     <div className="relative mx-auto h-60 w-60">
       <svg viewBox="0 0 200 200" className="h-full w-full -rotate-90" aria-hidden>
+        <defs>
+          <linearGradient id="tw-focus" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#6366f1" /><stop offset=".5" stopColor="#3b82f6" /><stop offset="1" stopColor="#22d3ee" /></linearGradient>
+          <linearGradient id="tw-break" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#2dd4bf" /><stop offset="1" stopColor="#10b981" /></linearGradient>
+        </defs>
         <circle cx="100" cy="100" r={r} fill="none" strokeWidth="16" className="stroke-slate-200 dark:stroke-slate-800" />
         <circle cx="100" cy="100" r={r} fill="none" strokeWidth="16" strokeLinecap="round" stroke={color} strokeDasharray={c} strokeDashoffset={c * (1 - fraction)} style={{ transition: "stroke-dashoffset 1s linear" }} />
       </svg>
@@ -114,7 +118,7 @@ export default function FocusView({ taskId, minutes }: { taskId: string | null; 
       </div>
 
       <section className={`${panel} space-y-4`}>
-        <Ring fraction={fraction} color={phase === "break" ? "#10b981" : color.hex} label={phase === "idle" ? `${length}:00` : mmss(left)} sub={phase === "focus" ? (paused != null ? "Paused" : "Focus time") : phase === "break" ? "Break" : "Ready when you are"} />
+        <Ring fraction={fraction} color={phase === "break" ? "url(#tw-break)" : "url(#tw-focus)"} label={phase === "idle" ? `${length}:00` : mmss(left)} sub={phase === "focus" ? (paused != null ? "Paused" : "Focus time") : phase === "break" ? "Break" : "Ready when you are"} />
         {phase === "idle" ? (
           <div className="space-y-3">
             <div className="flex flex-wrap justify-center gap-2">

@@ -43,7 +43,7 @@ function Loading({ children }: { children: React.ReactNode }) {
     return (
       <div className="grid min-h-[60vh] place-items-center">
         <div className="text-center">
-          <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-slate-300 border-t-indigo-600" aria-hidden />
+          <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-slate-300 border-t-sky-500" aria-hidden />
           <p className="mt-3 text-sm font-medium text-slate-500">Getting your day ready...</p>
         </div>
       </div>
@@ -52,12 +52,13 @@ function Loading({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
-export default function AppShell({ children }: { children: React.ReactNode }) {
+export default function AppShell({ children, footer }: { children: React.ReactNode; footer?: React.ReactNode }) {
   const path = usePathname();
   return (
     <StoreProvider>
       <div className="mx-auto min-h-screen max-w-2xl px-4 pb-28 pt-6">
         <Loading>{children}</Loading>
+        {footer}
       </div>
       <nav aria-label="Main" className="fixed inset-x-0 bottom-0 z-30 border-t border-slate-200 bg-white/90 backdrop-blur-lg dark:border-slate-800 dark:bg-slate-950/90">
         <ul className="mx-auto grid max-w-2xl grid-cols-4">
@@ -66,7 +67,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             return (
               <li key={href}>
                 <Link href={href} aria-current={active ? "page" : undefined}
-                  className={`flex flex-col items-center gap-1 py-3 text-xs font-semibold transition ${active ? "text-indigo-600 dark:text-indigo-400" : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"}`}>
+                  className={`relative flex flex-col items-center gap-1 py-3 text-xs font-semibold transition ${active ? "text-blue-600 dark:text-sky-400" : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"}`}>
+                  {active && <span className="absolute inset-x-6 top-0 h-0.5 rounded-full bg-gradient-to-r from-indigo-500 via-sky-500 to-cyan-400" aria-hidden />}
                   <Icon className="h-6 w-6" />
                   {label}
                 </Link>

@@ -15,15 +15,24 @@ export const COLOR: Record<ColorKey, { bar: string; chip: string; dot: string; t
 
 export const EMOJIS = ["⭐", "📚", "🧹", "💊", "🏃", "🍳", "💼", "📞", "🛒", "🧺", "💻", "✏️", "🦷", "🛏️", "🌱", "🎨", "💧", "📧", "🚗", "🐶"];
 
+// Cool gradients: the brand runs indigo -> blue -> cyan, with violet and teal accents.
+export const gradient = {
+  brand: "bg-gradient-to-r from-indigo-600 via-blue-600 to-cyan-500",
+  brandDiag: "bg-gradient-to-br from-indigo-500 via-blue-500 to-cyan-400",
+  text: "bg-gradient-to-r from-indigo-600 via-blue-600 to-cyan-500 bg-clip-text text-transparent dark:from-indigo-400 dark:via-sky-400 dark:to-cyan-300",
+  soft: "bg-gradient-to-br from-indigo-50 via-sky-50 to-cyan-50 dark:from-indigo-500/10 dark:via-sky-500/10 dark:to-cyan-500/10",
+  line: "bg-gradient-to-r from-indigo-500 via-sky-500 to-cyan-400",
+};
+
 export const btn = {
   primary:
-    "inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 py-3 font-semibold text-white shadow-sm transition hover:bg-indigo-500 active:scale-[0.98] disabled:opacity-50 dark:bg-indigo-500 dark:hover:bg-indigo-400",
+    "inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 via-blue-600 to-cyan-500 px-5 py-3 font-semibold text-white shadow-md shadow-blue-500/20 transition hover:brightness-110 active:scale-[0.98] disabled:opacity-50 disabled:shadow-none",
   soft:
     "inline-flex items-center justify-center gap-2 rounded-xl bg-white px-4 py-2.5 font-semibold text-slate-700 ring-1 ring-slate-200 transition hover:bg-slate-50 active:scale-[0.98] disabled:opacity-50 dark:bg-slate-900 dark:text-slate-200 dark:ring-slate-700 dark:hover:bg-slate-800",
   ghost: "inline-flex items-center justify-center gap-2 rounded-lg px-3 py-2 font-semibold text-slate-600 transition hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800",
 };
 export const input =
-  "w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-base text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-4 focus:ring-indigo-500/15 dark:border-slate-700 dark:bg-slate-900 dark:text-white";
+  "w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-base text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-sky-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-white";
 export const panel = "rounded-2xl bg-white p-5 ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-800";
 export const heading = "text-2xl font-bold tracking-tight text-slate-900 dark:text-white";
 export const muted = "text-slate-500 dark:text-slate-400";

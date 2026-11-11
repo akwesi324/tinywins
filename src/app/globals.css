@@ -9,14 +9,25 @@
   }
 }
 
+/* a quiet wash of cool gradients behind everything */
 body {
   min-height: 100vh;
-  background: #f7f7fb;
+  background:
+    radial-gradient(60rem 30rem at 0% -10%, rgb(99 102 241 / 0.12), transparent 60%),
+    radial-gradient(50rem 30rem at 100% 0%, rgb(34 211 238 / 0.12), transparent 60%),
+    radial-gradient(60rem 40rem at 50% 110%, rgb(59 130 246 / 0.10), transparent 60%),
+    #f6f8fc;
+  background-attachment: fixed;
   color: #0f172a;
 }
 @media (prefers-color-scheme: dark) {
   body {
-    background: #0b0d14;
+    background:
+      radial-gradient(60rem 30rem at 0% -10%, rgb(99 102 241 / 0.18), transparent 60%),
+      radial-gradient(50rem 30rem at 100% 0%, rgb(34 211 238 / 0.12), transparent 60%),
+      radial-gradient(60rem 40rem at 50% 110%, rgb(59 130 246 / 0.14), transparent 60%),
+      #090c14;
+    background-attachment: fixed;
     color: #e2e8f0;
   }
 }

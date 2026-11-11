@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ResetForm } from "@/components/AuthForms";
 import { panel } from "@/lib/colors";
+import Copyright from "@/components/Copyright";
 
 export const metadata: Metadata = { title: "New password" };
 
@@ -21,6 +22,7 @@ export default async function ResetPage({ searchParams }: PageProps<"/reset-pass
           </p>
         )}
       </div>
+      <Copyright className="pt-6" />
     </div>
   );
 }

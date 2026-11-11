@@ -28,9 +28,9 @@ function EnergyCheckIn({ current, onPick }: { current: Energy | undefined; onPic
       <div className="grid grid-cols-3 gap-2">
         {ENERGY.map((e) => (
           <button key={e.level} onClick={() => onPick(e.level)} aria-pressed={current === e.level}
-            className={`rounded-xl p-3 text-left transition active:scale-[0.98] ${current === e.level ? "bg-indigo-600 text-white" : "bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200"}`}>
+            className={`rounded-xl p-3 text-left transition active:scale-[0.98] ${current === e.level ? "bg-gradient-to-br from-indigo-600 via-blue-600 to-cyan-500 text-white shadow-md shadow-blue-500/20" : "bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200"}`}>
             <span className="block font-bold">{e.label}</span>
-            <span className={`block text-xs ${current === e.level ? "text-indigo-100" : "text-slate-500"}`}>{e.hint}</span>
+            <span className={`block text-xs ${current === e.level ? "text-sky-100" : "text-slate-500"}`}>{e.hint}</span>
           </button>
         ))}
       </div>
@@ -57,7 +57,7 @@ export default function TodayView({ aiEnabled }: { aiEnabled: boolean }) {
     <div className="space-y-5">
       <header className="flex items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">{greeting(name)}</h1>
+          <h1 className="bg-gradient-to-r from-indigo-600 via-blue-600 to-cyan-500 bg-clip-text text-2xl font-bold tracking-tight text-transparent dark:from-indigo-400 dark:via-sky-400 dark:to-cyan-300">{greeting(name)}</h1>
           <p className="text-slate-500">{tasks.length && doneCount === tasks.length ? "Everything for today is done." : `${doneCount} of ${tasks.length} done`}</p>
         </div>
         <div className="flex gap-2">
@@ -73,7 +73,7 @@ export default function TodayView({ aiEnabled }: { aiEnabled: boolean }) {
       {isToday && (!state.energy[today] || low) && <EnergyCheckIn current={state.energy[today]} onPick={store.setEnergy} />}
 
       {isToday && low && (
-        <section className="flex gap-3 rounded-2xl bg-indigo-50 p-5 dark:bg-indigo-500/10">
+        <section className="flex gap-3 rounded-2xl bg-gradient-to-br from-violet-50 via-indigo-50 to-sky-50 p-5 ring-1 ring-indigo-100 dark:from-violet-500/10 dark:via-indigo-500/10 dark:to-sky-500/10 dark:ring-indigo-500/20">
           <IconBattery className="mt-0.5 h-5 w-5 shrink-0 text-indigo-600 dark:text-indigo-400" />
           <div>
             <p className="font-bold text-indigo-950 dark:text-indigo-100">Low-energy day mode</p>
@@ -118,7 +118,7 @@ export default function TodayView({ aiEnabled }: { aiEnabled: boolean }) {
           That&apos;s five, the limit for one day. Finish one or move one to another day to make room.
         </p>
       ) : (
-        <button className={`${btn.primary} w-full py-3.5`} onClick={() => setAdding(true)}>
+        <button className={`${btn.primary} w-full py-3.5`} onClick={() => setAdding(true)} data-add-task>
           + Add a task ({MAX_TASKS_PER_DAY - tasks.length} {MAX_TASKS_PER_DAY - tasks.length === 1 ? "slot" : "slots"} left)
         </button>
       )}

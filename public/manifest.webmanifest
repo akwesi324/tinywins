@@ -4,8 +4,8 @@
   "description": "A day planner built for ADHD: five tasks a day, reminders until they're done, and real progress you can see.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#f7f7fb",
-  "theme_color": "#4f46e5",
+  "background_color": "#f6f8fc",
+  "theme_color": "#3b82f6",
   "icons": [
     {
       "src": "/icon.svg",

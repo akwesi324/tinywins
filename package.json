@@ -33,5 +33,7 @@
     "eslint-config-next": "16.4.2",
     "tailwindcss": "^4",
     "typescript": "^5"
-  }
+  },
+  "author": "MaskedOps",
+  "description": "A day planner built for ADHD: five tasks a day, reminders until they're done, and real progress you can see."
 }

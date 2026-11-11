@@ -19,7 +19,7 @@ export const IconBattery = ({ className }: P) => (<svg {...base(className)}><rec
 
 export function Logo({ size = "h-9 w-9" }: { size?: string }) {
   return (
-    <span className={`grid ${size} place-items-center rounded-xl bg-indigo-600 text-white shadow-sm`} aria-hidden>
+    <span className={`grid ${size} place-items-center rounded-xl bg-gradient-to-br from-indigo-500 via-blue-500 to-cyan-400 text-white shadow-md shadow-blue-500/25`} aria-hidden>
       <IconCheck className="h-5 w-5" />
     </span>
   );

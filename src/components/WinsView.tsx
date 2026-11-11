@@ -31,11 +31,12 @@ export default function WinsView() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Progress</h1>
+      <h1 className="bg-gradient-to-r from-indigo-600 via-blue-600 to-cyan-500 bg-clip-text text-2xl font-bold tracking-tight text-transparent dark:from-indigo-400 dark:via-sky-400 dark:to-cyan-300">Progress</h1>
 
       <section className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {stats.map(({ Icon, tint, v, l }) => (
-          <div key={l} className={panel}>
+          <div key={l} className={`${panel} relative overflow-hidden`}>
+            <span className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-indigo-500 via-sky-500 to-cyan-400" aria-hidden />
             <Icon className={`h-5 w-5 ${tint}`} />
             <p className="mt-2 text-2xl font-bold tracking-tight text-slate-900 dark:text-white">{v}</p>
             <p className="text-sm text-slate-500">{l}</p>
@@ -58,7 +59,7 @@ export default function WinsView() {
                 <div className="min-w-0 flex-1">
                   <p className="font-semibold text-slate-900 dark:text-white">{r.title}</p>
                   <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700">
-                    <div className="h-full rounded-full bg-indigo-500" style={{ width: `${Math.min(100, (balance / r.cost) * 100)}%` }} />
+                    <div className="h-full rounded-full bg-gradient-to-r from-indigo-500 via-sky-500 to-cyan-400" style={{ width: `${Math.min(100, (balance / r.cost) * 100)}%` }} />
                   </div>
                   <p className="mt-1 text-xs text-slate-500">{can ? "Ready to claim" : `${r.cost - balance} more points`} · {r.cost} pts</p>
                 </div>
@@ -73,7 +74,7 @@ export default function WinsView() {
           <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">Add your own reward</p>
           <div className="flex flex-wrap gap-1.5">
             {REWARD_EMOJIS.map((x) => (
-              <button type="button" key={x} onClick={() => setEmoji(x)} aria-pressed={emoji === x} className={`grid h-9 w-9 place-items-center rounded-lg text-lg ${emoji === x ? "bg-indigo-50 ring-2 ring-indigo-500 dark:bg-indigo-500/15" : "bg-slate-100 dark:bg-slate-800"}`}>{x}</button>
+              <button type="button" key={x} onClick={() => setEmoji(x)} aria-pressed={emoji === x} className={`grid h-9 w-9 place-items-center rounded-lg text-lg ${emoji === x ? "bg-sky-50 ring-2 ring-blue-500 dark:bg-sky-500/15" : "bg-slate-100 dark:bg-slate-800"}`}>{x}</button>
             ))}
           </div>
           <div className="flex gap-2">

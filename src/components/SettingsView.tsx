@@ -66,7 +66,7 @@ export default function SettingsView({ vapidKey }: { vapidKey: string | null }) 
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Settings</h1>
+      <h1 className="bg-gradient-to-r from-indigo-600 via-blue-600 to-cyan-500 bg-clip-text text-2xl font-bold tracking-tight text-transparent dark:from-indigo-400 dark:via-sky-400 dark:to-cyan-300">Settings</h1>
 
       <section className={`${panel} space-y-3`}>
         <h2 className="text-lg font-bold text-slate-900 dark:text-white">Reminders</h2>
